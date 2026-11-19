@@ -8,7 +8,42 @@ const loading = ref(true)
 const loadError = ref('')
 const email = ref('')
 const shopDirectorExists = ref(false)
+const directorUsername = ref('')
+const directorEmail = ref('')
+const directorPassword = ref('')
+const creatingDirector = ref(false)
+const directorError = ref('')
+const directorSuccess = ref('')
 const checking = ref(true)
+
+async function createShopDirector() {
+  directorError.value = ''
+  directorSuccess.value = ''
+  if (directorPassword.value.length < 10) {
+    directorError.value = 'Use a password with at least 10 characters.'
+    return
+  }
+  creatingDirector.value = true
+  try {
+    const { data, error } = await supabase.functions.invoke('admin-users', {
+      body: {
+        action: 'create_shop_director',
+        username: directorUsername.value,
+        email: directorEmail.value,
+        password: directorPassword.value,
+      },
+    })
+    if (error) throw error
+    if (data?.error) throw new Error(data.error)
+    directorSuccess.value = 'Shop Director account created. The director can now sign in using the email and password you set.'
+    shopDirectorExists.value = true
+    directorPassword.value = ''
+  } catch (cause: unknown) {
+    directorError.value = cause instanceof Error ? cause.message : 'Could not create the Shop Director account.'
+  } finally {
+    creatingDirector.value = false
+  }
+}
 const initials = computed(() => (email.value.split('@')[0] || 'SA').slice(0, 2).toUpperCase())
 
 onMounted(async () => {
@@ -127,8 +162,18 @@ async function signOut() {
             <article class="info-panel">
               <div class="panel-heading"><span class="panel-icon">♙</span><div><h3>Shop Director account</h3><p>The next account to create</p></div></div>
               <p class="panel-copy">The Shop Director will manage the business workspace. This account will not have system super administrator privileges.</p>
-              <button class="disabled-action" disabled>Create Shop Director account <span>→</span></button>
-              <small class="action-note">Account creation will be enabled after the secure server-side provisioning function is connected.</small>
+              
+              <form class="director-form" @submit.prevent="createShopDirector">
+                <label>Director username<input v-model.trim="directorUsername" required minlength="3" maxlength="40" pattern="[A-Za-z0-9._-]+" placeholder="e.g. shopdirector"></label>
+                <label>Director email address<input v-model.trim="directorEmail" type="email" required placeholder="director@example.com"></label>
+                <label>Temporary password<input v-model="directorPassword" type="password" required minlength="10" autocomplete="new-password" placeholder="At least 10 characters"></label>
+                <p v-if="directorError" class="form-message error-message">{{ directorError }}</p>
+                <p v-if="directorSuccess" class="form-message success-message">{{ directorSuccess }}</p>
+                <button class="create-action" type="submit" :disabled="creatingDirector || shopDirectorExists">
+                  {{ creatingDirector ? 'Creating account…' : shopDirectorExists ? 'Shop Director already registered' : 'Create Shop Director account' }} <span>→</span>
+                </button>
+              </form>
+              <small class="action-note">Only the System Super Admin can create this account. The password is sent securely to Supabase Auth and is not stored in the profile.</small>
             </article>
             <article class="info-panel security-panel">
               <div class="panel-heading"><span class="panel-icon shield">◇</span><div><h3>Access boundaries</h3><p>Two separate levels of authority</p></div></div>
@@ -156,7 +201,7 @@ async function signOut() {
 .overview-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px;margin-bottom:30px}.overview-card{padding:18px 19px;background:#fff;border:1px solid #e8ecf3;border-radius:13px;box-shadow:0 4px 16px #1b2b4a05;min-width:0}.card-top{display:flex;align-items:center;gap:9px}.card-icon{width:30px;height:30px;display:grid;place-items:center;border-radius:9px;font-size:15px}.card-icon.purple{background:#eef0ff;color:#6475db}.card-icon.teal{background:#e7f8f5;color:#229b88}.card-icon.amber{background:#fff5e6;color:#c18a36}.card-label{font-size:8px;letter-spacing:.12em;color:#8a96aa;font-weight:850}.overview-card>strong{display:block;font-size:27px;letter-spacing:-.04em;margin:14px 0 3px;color:#1b2945}.overview-card>strong.status-text{font-size:19px;color:#c18a36;margin-top:18px}.overview-card>p{margin:0;color:#929caf;font-size:10px}
 .section-heading{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:13px}.section-heading h2{font-size:16px;margin:0 0 5px;letter-spacing:-.02em}.section-heading p{font-size:10px;color:#8995a8;margin:0}.progress-label{font-size:8px;font-weight:850;letter-spacing:.1em;color:#a77a35;background:#fff5e6;padding:7px 10px;border-radius:20px}
 .setup-card{background:#fff;border:1px solid #e8ecf3;border-radius:13px;padding:4px 20px;margin-bottom:17px}.setup-step{display:flex;align-items:center;gap:13px;padding:17px 0;border-bottom:1px solid #f0f2f6}.setup-step:last-child{border-bottom:0}.step-number{width:27px;height:27px;flex:none;border:1px solid #e0e5ed;border-radius:50%;display:grid;place-items:center;font-size:10px;font-weight:800;color:#9ba6b8}.setup-step.done .step-number{background:#e3f7ee;border-color:#e3f7ee;color:#1b9b70}.setup-step.current .step-number{background:#eef0ff;border-color:#dfe3ff;color:#596bd4}.setup-step b{font-size:11px;color:#26334e}.setup-step p{font-size:10px;color:#8c97a9;margin:4px 0 0}.step-state{margin-left:auto;font-size:8px;letter-spacing:.08em;font-weight:850;color:#9aa5b7;white-space:nowrap}.setup-step.done .step-state{color:#269b75}.setup-step.current .step-state{color:#6475d7}
-.bottom-grid{display:grid;grid-template-columns:1.1fr .9fr;gap:14px}.info-panel{background:#fff;border:1px solid #e8ecf3;border-radius:13px;padding:19px}.panel-heading{display:flex;align-items:center;gap:11px}.panel-icon{width:33px;height:33px;border-radius:10px;display:grid;place-items:center;background:#eef0ff;color:#6274d8;font-size:17px}.panel-icon.shield{background:#e8f7f3;color:#229b88}.panel-heading h3{font-size:12px;margin:0 0 4px}.panel-heading p{font-size:9px;color:#929caf;margin:0}.panel-copy{font-size:10px;line-height:1.7;color:#7e899c;margin:16px 0}.disabled-action{width:100%;display:flex;justify-content:space-between;align-items:center;padding:11px 13px;border:0;border-radius:9px;background:#e8ebf7;color:#7885bc;font-size:10px;font-weight:800;cursor:not-allowed}.disabled-action span{font-size:17px}.action-note{display:block;color:#a0a9b8;font-size:8px;line-height:1.5;margin-top:9px}.access-line{display:flex;align-items:flex-start;gap:10px;margin-top:19px}.access-dot{width:8px;height:8px;border-radius:50%;margin-top:3px;flex:none}.access-dot.system{background:#687be2;box-shadow:0 0 0 4px #eef0ff}.access-dot.director{background:#22a18a;box-shadow:0 0 0 4px #e7f8f5}.access-line b{display:block;font-size:10px}.access-line small{display:block;font-size:9px;color:#929caf;margin-top:4px;line-height:1.4}
+.bottom-grid{display:grid;grid-template-columns:1.1fr .9fr;gap:14px}.info-panel{background:#fff;border:1px solid #e8ecf3;border-radius:13px;padding:19px}.panel-heading{display:flex;align-items:center;gap:11px}.panel-icon{width:33px;height:33px;border-radius:10px;display:grid;place-items:center;background:#eef0ff;color:#6274d8;font-size:17px}.panel-icon.shield{background:#e8f7f3;color:#229b88}.panel-heading h3{font-size:12px;margin:0 0 4px}.panel-heading p{font-size:9px;color:#929caf;margin:0}.panel-copy{font-size:10px;line-height:1.7;color:#7e899c;margin:16px 0}.director-form{display:grid;gap:10px;margin-top:15px}.director-form label{display:grid;gap:5px;color:#69758b;font-size:9px;font-weight:750}.director-form input{width:100%;min-width:0;border:1px solid #e1e6ef;border-radius:8px;padding:10px 11px;font:inherit;font-size:11px;color:#26334e;background:#fbfcfe;outline:none}.director-form input:focus{border-color:#8391e8;box-shadow:0 0 0 3px #eef0ff}.create-action{width:100%;display:flex;justify-content:space-between;align-items:center;padding:12px 13px;border:0;border-radius:9px;background:#596bd4;color:white;font-size:10px;font-weight:800;cursor:pointer}.create-action:hover:not(:disabled){background:#4659c2}.create-action:disabled{opacity:.55;cursor:not-allowed}.create-action span{font-size:17px}.form-message{font-size:10px;line-height:1.5;margin:0;padding:9px;border-radius:7px;overflow-wrap:anywhere}.error-message{background:#fff0ef;color:#b42318}.success-message{background:#eaf8f1;color:#18734f}.action-note{display:block;color:#a0a9b8;font-size:8px;line-height:1.5;margin-top:9px}.access-line{display:flex;align-items:flex-start;gap:10px;margin-top:19px}.access-dot{width:8px;height:8px;border-radius:50%;margin-top:3px;flex:none}.access-dot.system{background:#687be2;box-shadow:0 0 0 4px #eef0ff}.access-dot.director{background:#22a18a;box-shadow:0 0 0 4px #e7f8f5}.access-line b{display:block;font-size:10px}.access-line small{display:block;font-size:9px;color:#929caf;margin-top:4px;line-height:1.4}
 .system-alert{background:#fff0ef;color:#b42318;padding:12px;border-radius:9px;font-size:11px;margin-bottom:15px;overflow-wrap:anywhere}.system-loading{padding:35px;text-align:center;color:#8b97aa;font-size:12px}.system-footer{display:flex;align-items:center;gap:8px;color:#a0a9b8;font-size:8px;letter-spacing:.1em;margin-top:28px}.system-footer span{color:#c1c8d3}
 @media(max-width:1050px){.system-admin{grid-template-columns:220px minmax(0,1fr)}.system-sidebar{padding-left:12px;padding-right:12px}.overview-grid{gap:9px}.card-label{font-size:7px}}
 @media(max-width:760px){.system-admin{display:block}.system-sidebar{position:relative;top:auto;height:auto;min-height:0;padding:14px 16px}.system-brand{padding:0 4px 13px}.system-sidebar>.sidebar-caption,.system-sidebar>.system-nav,.system-sidebar>.spaced{display:none}.system-sidebar-bottom{display:flex;align-items:center;justify-content:space-between;margin-top:0;padding:12px 3px 0}.signout{width:auto;margin:0;padding:8px 10px}.system-topbar{height:53px;padding:0 18px}.system-content{padding:25px 17px}.welcome-row{align-items:flex-start;flex-direction:column}.welcome-row h1{font-size:25px}.date-chip{display:none}.overview-grid{grid-template-columns:1fr 1fr}.overview-card{padding:14px}.overview-card:last-child{grid-column:span 2}.bottom-grid{grid-template-columns:1fr}.setup-card{padding:2px 13px}.setup-step{gap:10px}.step-state{font-size:7px}.top-admin{font-size:0}.top-avatar{font-size:10px}}
