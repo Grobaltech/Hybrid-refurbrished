@@ -23,11 +23,39 @@ Deno.serve(async (req) => {
   if (authError || !authData.user) return respond({ error: "Your session is invalid. Sign in again." }, 401);
 
   const { data: caller, error: callerError } = await admin.from("profiles").select("id, role, disabled").eq("id", authData.user.id).maybeSingle();
-  if (callerError || !caller || caller.disabled || caller.role !== "admin") return respond({ error: "Administrator permission required." }, 403);
+  if (callerError || !caller || caller.disabled || !["admin", "super_admin"].includes(String(caller.role))) return respond({ error: "Administrator permission required." }, 403);
 
   try {
     const body = await req.json();
     const action = String(body.action ?? "");
+
+    // Only the system super administrator may provision the shop director.
+    if (action === "create_shop_director") {
+      if (caller.role !== "super_admin") return respond({ error: "System Super Admin permission required." }, 403);
+      const username = String(body.username ?? "").trim().toLowerCase();
+      const email = String(body.email ?? "").trim().toLowerCase();
+      const password = String(body.password ?? "");
+      if (!/^[a-z0-9._-]{3,40}$/.test(username)) return respond({ error: "Username must be 3–40 characters and use letters, numbers, dots, underscores or hyphens." }, 400);
+      if (!email || !/^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/.test(email)) return respond({ error: "A valid email address is required." }, 400);
+      if (password.length < 10) return respond({ error: "Password must contain at least 10 characters." }, 400);
+      const { data: existing } = await admin.from("profiles").select("id").eq("role", "admin").limit(1);
+      if (existing?.length) return respond({ error: "A Shop Director account already exists. Only one Shop Director can be created here." }, 409);
+      const { data: created, error: createError } = await admin.auth.admin.createUser({
+        email, password, email_confirm: true, user_metadata: { username, account_type: "shop_director" },
+      });
+      if (createError || !created.user) return respond({ error: createError?.message ?? "Account creation failed." }, 400);
+      const { error: profileError } = await admin.from("profiles").insert({
+        id: created.user.id, username, role: "admin", email, disabled: false,
+      });
+      if (profileError) {
+        await admin.auth.admin.deleteUser(created.user.id);
+        return respond({ error: profileError.message }, 400);
+      }
+      return respond({ ok: true, id: created.user.id, role: "admin" }, 201);
+    }
+
+    // All remaining staff-management actions are reserved for shop admins.
+    if (caller.role !== "admin") return respond({ error: "This action is available only to the Shop Director." }, 403);
 
     if (action === "list") {
       const { data, error } = await admin.from("profiles").select("id, username, email, phone, role, disabled, created_at").order("created_at", { ascending: false });
