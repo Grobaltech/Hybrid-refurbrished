@@ -1,2 +1,45 @@
-<script setup lang="ts">import {RouterLink,RouterView,useRouter} from 'vue-router';import {supabase} from '../lib/supabase';const router=useRouter();async function logout(){await supabase.auth.signOut();router.replace('/login')}</script>
-<template><div class="min-h-screen md:flex"><aside class="bg-slate-950 text-white md:w-64 p-6"><div class="text-xl font-bold">Hybrid Shop</div><p class="text-xs text-slate-400 mt-1">Management workspace</p><nav class="mt-10 grid gap-2"><RouterLink class="rounded-lg px-3 py-2 hover:bg-slate-800" to="/dashboard">Dashboard</RouterLink><RouterLink class="rounded-lg px-3 py-2 hover:bg-slate-800" to="/users">Users & access</RouterLink><RouterLink class="rounded-lg px-3 py-2 hover:bg-slate-800" to="/account">My account</RouterLink></nav><button class="mt-10 text-sm text-slate-300" @click="logout">Sign out</button></aside><main class="flex-1 min-w-0 p-5 md:p-9"><RouterView /></main></div></template>
+<script setup lang="ts">
+import { computed, ref } from 'vue'
+import { RouterLink, RouterView, useRouter } from 'vue-router'
+import { supabase } from '../lib/supabase'
+const router = useRouter()
+const role = ref('cashier')
+const links = [
+  ['Dashboard','/dashboard',['admin','manager','cashier']],
+  ['New sale','/sales',['admin','manager','cashier']],
+  ['Receipts','/receipts',['admin','manager','cashier']],
+  ['Sales history','/sales-history',['admin','manager']],
+  ['Products & inventory','/products',['admin','manager']],
+  ['Purchases','/purchases',['admin','manager']],
+  ['Customers','/customers',['admin','manager','cashier']],
+  ['Suppliers','/suppliers',['admin','manager']],
+  ['Customer credits','/credits',['admin','manager','cashier']],
+  ['Creditors','/creditors',['admin','manager']],
+  ['Expenses','/expenses',['admin','manager']],
+  ['Reports','/reports',['admin','manager']],
+  ['Balance','/balance',['admin']],
+  ['Search','/search',['admin','manager','cashier']],
+  ['Users & access','/users',['admin']],
+  ['Activity','/activity',['admin']],
+  ['Settings','/settings',['admin']],
+  ['My account','/account',['admin','manager','cashier']],
+]
+const visible = computed(() => links.filter(x => (x[2] as string[]).includes(role.value)))
+async function logout() { await supabase.auth.signOut(); await router.replace('/login') }
+supabase.auth.getUser().then(async ({data}) => {
+  if (data.user) {
+    const {data: p} = await supabase.from('profiles').select('role').eq('id',data.user.id).maybeSingle()
+    if (p?.role) role.value = p.role
+  }
+})
+</script>
+<template>
+  <div class="app-shell">
+    <aside class="sidebar">
+      <RouterLink to="/dashboard" class="brand"><span class="brand-mark">H</span><span>Hybrid Shop<small>Management workspace</small></span></RouterLink>
+      <nav class="side-nav"><RouterLink v-for="link in visible" :key="link[1]" :to="link[1]">{{link[0]}}</RouterLink></nav>
+      <div class="side-bottom"><span class="role-label">{{role}}</span><RouterLink to="/account">My account</RouterLink><button @click="logout">Sign out</button></div>
+    </aside>
+    <main class="main-area"><header class="mobile-bar"><b>Hybrid Shop</b><button @click="logout">Sign out</button></header><RouterView /></main>
+  </div>
+</template>
