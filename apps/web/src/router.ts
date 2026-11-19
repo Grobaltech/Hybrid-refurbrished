@@ -5,6 +5,7 @@ const router = createRouter({
   history: createWebHistory(),
   routes: [
     { path: '/login', component: () => import('./views/LoginView.vue') },
+    { path: '/system-admin', component: () => import('./views/SystemAdminView.vue') },
     {
       path: '/',
       component: () => import('./layouts/AppLayout.vue'),
@@ -41,16 +42,36 @@ const router = createRouter({
 
 router.beforeEach(async (to) => {
   const { data: { session } } = await supabase.auth.getSession()
-  if (to.path === '/login') return session ? '/dashboard' : true
-  if (!session) return '/login'
-  const { data: profile, error } = await supabase.from('profiles')
-    .select('role, disabled').eq('id', session.user.id).maybeSingle()
+
+  if (!session) {
+    return to.path === '/login' ? true : '/login'
+  }
+
+  const { data: profile, error } = await supabase
+    .from('profiles')
+    .select('role, disabled')
+    .eq('id', session.user.id)
+    .maybeSingle()
+
   if (error || !profile || profile.disabled) {
     await supabase.auth.signOut()
     return '/login'
   }
+
+  const role = String(profile.role)
+
+  if (to.path === '/login' || to.path === '/') {
+    return role === 'super_admin' ? '/system-admin' : '/dashboard'
+  }
+
+  if (role === 'super_admin') {
+    return to.path === '/system-admin' ? true : '/system-admin'
+  }
+
+  if (to.path === '/system-admin') return '/dashboard'
+
   const allowed = to.meta.roles as string[] | undefined
-  if (allowed && !allowed.includes(String(profile.role))) return '/forbidden'
+  if (allowed && !allowed.includes(role)) return '/forbidden'
   return true
 })
 
