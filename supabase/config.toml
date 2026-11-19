@@ -1,0 +1,4 @@
+project_id = "hybrid-shop"
+
+[functions.admin-users]
+verify_jwt = false
