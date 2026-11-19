@@ -60,7 +60,10 @@ onMounted(async () => {
       return
     }
 
-    shopDirectorExists.value = false
+    const { data: directors, error: directorCheckError } = await supabase
+      .from('profiles').select('id').eq('role', 'admin').limit(1)
+    if (directorCheckError) throw directorCheckError
+    shopDirectorExists.value = Boolean(directors?.length)
   } catch (cause: unknown) {
     loadError.value = cause instanceof Error ? cause.message : 'Could not load system information.'
   } finally {
