@@ -8,7 +8,6 @@ const loading = ref(true)
 const loadError = ref('')
 const email = ref('')
 const shopDirectorExists = ref(false)
-const accountCount = ref<number | null>(null)
 const checking = ref(true)
 const initials = computed(() => (email.value.split('@')[0] || 'SA').slice(0, 2).toUpperCase())
 
@@ -26,12 +25,6 @@ onMounted(async () => {
       return
     }
 
-    // The current schema has no dedicated shop/tenant record yet. Count staff profiles
-    // only as a simple system indicator; do not infer that a director account exists.
-    const { count, error: countError } = await supabase
-      .from('profiles').select('id', { count: 'exact', head: true })
-    if (countError) throw countError
-    accountCount.value = count ?? 0
     shopDirectorExists.value = false
   } catch (cause: unknown) {
     loadError.value = cause instanceof Error ? cause.message : 'Could not load system information.'
@@ -96,8 +89,8 @@ async function signOut() {
           <div class="overview-grid">
             <article class="overview-card primary-card">
               <div class="card-top"><span class="card-icon purple">▣</span><span class="card-label">REGISTERED STAFF PROFILES</span></div>
-              <strong>{{ accountCount ?? '—' }}</strong>
-              <p>Profiles currently registered in Hybrid</p>
+              <strong>Active</strong>
+              <p>System administrator profile verified</p>
             </article>
             <article class="overview-card">
               <div class="card-top"><span class="card-icon teal">⌂</span><span class="card-label">SHOP ENVIRONMENT</span></div>
