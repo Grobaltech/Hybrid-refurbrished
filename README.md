@@ -5,16 +5,17 @@ A refreshed Hybrid Shop application built with Vue 3, Tailwind CSS, TypeScript a
 ## Structure
 - `apps/web` — Vue 3 single-page application.
 - `supabase/migrations` — database schema and access-control policies.
-- `supabase/functions` — secure privileged account operations (Supabase Edge Functions).
+- `supabase/functions/admin-users` — secure privileged staff-account operations.
 
 ## Setup
 1. Copy `.env.example` to `.env` and set the Supabase project URL and anon key.
-2. Install dependencies with `npm install`.
-3. Run the web app with `npm run dev`.
-4. Apply the SQL migrations to the intended Supabase project.
-5. Deploy the `admin-users` Edge Function and set `SUPABASE_URL` and `SUPABASE_SERVICE_ROLE_KEY` as Supabase function secrets.
+2. Run `npm install`, then `npm run dev`.
+3. Apply `supabase/migrations/0001_staff_access.sql` to the Supabase project.
+4. Deploy the `admin-users` Edge Function and set `SUPABASE_URL` and `SUPABASE_SERVICE_ROLE_KEY` as Supabase function secrets.
 
-Never place the Supabase service-role key in frontend environment variables or commit it to this public repository.
+Never expose the service-role key in frontend variables or commit it to this public repository.
 
 ## Staff accounts
-The Users & Access screen is restricted to administrators. Account creation, disabling/enabling, role changes and password resets are performed by the `admin-users` Edge Function after it verifies the caller's Supabase JWT and administrator role. Staff members can change their own password from Account settings.
+The Users & Access screen is administrator-only. Account creation, enabling/disabling, role changes, individual capabilities, page overrides and administrator password resets are performed by the `admin-users` Edge Function. The function verifies the caller's Supabase access token and administrator profile before executing privileged operations. Staff can change their own password from My Account.
+
+Staff creation requires a unique username and email address. The email is the Supabase sign-in identity; the username is the in-app staff identifier.
