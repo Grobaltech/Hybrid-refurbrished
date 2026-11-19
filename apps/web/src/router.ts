@@ -1,4 +1,57 @@
-import {createRouter,createWebHistory} from 'vue-router';import {supabase} from './lib/supabase'
-const router=createRouter({history:createWebHistory(),routes:[{path:'/login',component:()=>import('./views/LoginView.vue')},{path:'/',component:()=>import('./layouts/AppLayout.vue'),children:[{path:'',redirect:'/dashboard'},{path:'dashboard',component:()=>import('./views/DashboardView.vue')},{path:'users',component:()=>import('./views/UsersView.vue'),meta:{adminOnly:true}},{path:'account',component:()=>import('./views/AccountView.vue')} ]},{path:'/:pathMatch(.*)*',redirect:'/dashboard'}]})
-router.beforeEach(async to=>{const {data}=await supabase.auth.getSession();const session=data.session;if(to.path==='/login')return session?'/dashboard':true;if(!session)return '/login';const {data:profile,error}=await supabase.from('profiles').select('role,disabled').eq('id',session.user.id).maybeSingle();if(error||!profile||profile.disabled){await supabase.auth.signOut();return '/login'}if(to.meta.adminOnly&&profile.role!=='admin')return '/dashboard';return true})
+import { createRouter, createWebHistory } from 'vue-router'
+import { supabase } from './lib/supabase'
+
+const router = createRouter({
+  history: createWebHistory(),
+  routes: [
+    { path: '/login', component: () => import('./views/LoginView.vue') },
+    {
+      path: '/',
+      component: () => import('./layouts/AppLayout.vue'),
+      children: [
+        { path: '', redirect: '/dashboard' },
+        { path: 'dashboard', component: () => import('./views/DashboardView.vue') },
+        { path: 'sales', component: () => import('./views/SalesView.vue'), meta: { roles: ['admin','manager','cashier'] } },
+        { path: 'receipts', component: () => import('./views/ReceiptsView.vue'), meta: { roles: ['admin','manager','cashier'] } },
+        { path: 'receipts/:id', component: () => import('./views/ReceiptDetailView.vue'), meta: { roles: ['admin','manager','cashier'] } },
+        { path: 'sales-history', component: () => import('./views/SalesHistoryView.vue'), meta: { roles: ['admin','manager'] } },
+        { path: 'products', component: () => import('./views/ProductsView.vue'), meta: { roles: ['admin','manager'] } },
+        { path: 'products/:id', component: () => import('./views/ProductEditView.vue'), meta: { roles: ['admin','manager'] } },
+        { path: 'purchases', component: () => import('./views/PurchasesView.vue'), meta: { roles: ['admin','manager'] } },
+        { path: 'customers', component: () => import('./views/CustomersView.vue'), meta: { roles: ['admin','manager','cashier'] } },
+        { path: 'suppliers', component: () => import('./views/SuppliersView.vue'), meta: { roles: ['admin','manager'] } },
+        { path: 'credits', component: () => import('./views/CreditsView.vue'), meta: { roles: ['admin','manager','cashier'] } },
+        { path: 'creditors', component: () => import('./views/CreditorsView.vue'), meta: { roles: ['admin','manager'] } },
+        { path: 'expenses', component: () => import('./views/ExpensesView.vue'), meta: { roles: ['admin','manager'] } },
+        { path: 'reports', component: () => import('./views/ReportsView.vue'), meta: { roles: ['admin','manager'] } },
+        { path: 'balance', component: () => import('./views/BalanceView.vue'), meta: { roles: ['admin'] } },
+        { path: 'search', component: () => import('./views/SearchView.vue') },
+        { path: 'settings', component: () => import('./views/SettingsView.vue'), meta: { roles: ['admin'] } },
+        { path: 'users', component: () => import('./views/UsersView.vue'), meta: { roles: ['admin'] } },
+        { path: 'activity', component: () => import('./views/ActivityView.vue'), meta: { roles: ['admin'] } },
+        { path: 'crm', component: () => import('./views/CrmHomeView.vue'), meta: { roles: ['admin'] } },
+        { path: 'cms', component: () => import('./views/ContentHomeView.vue'), meta: { roles: ['admin'] } },
+        { path: 'account', component: () => import('./views/AccountView.vue') },
+        { path: 'forbidden', component: () => import('./views/ForbiddenView.vue') },
+      ],
+    },
+    { path: '/:pathMatch(.*)*', redirect: '/dashboard' },
+  ],
+})
+
+router.beforeEach(async (to) => {
+  const { data: { session } } = await supabase.auth.getSession()
+  if (to.path === '/login') return session ? '/dashboard' : true
+  if (!session) return '/login'
+  const { data: profile, error } = await supabase.from('profiles')
+    .select('role, disabled').eq('id', session.user.id).maybeSingle()
+  if (error || !profile || profile.disabled) {
+    await supabase.auth.signOut()
+    return '/login'
+  }
+  const allowed = to.meta.roles as string[] | undefined
+  if (allowed && !allowed.includes(String(profile.role))) return '/forbidden'
+  return true
+})
+
 export default router
