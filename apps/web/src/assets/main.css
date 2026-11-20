@@ -186,3 +186,61 @@ tbody tr:hover{background:rgba(255,255,255,.55)}
 .mobile-menu-slide-enter-active,.mobile-menu-slide-leave-active{transition:transform .24s cubic-bezier(.2,.8,.2,1)}
 .mobile-menu-slide-enter-from,.mobile-menu-slide-leave-to{transform:translateX(-105%)}
 @media(prefers-reduced-motion:reduce){.mobile-menu-fade-enter-active,.mobile-menu-fade-leave-active,.mobile-menu-slide-enter-active,.mobile-menu-slide-leave-active{transition:none}}
+
+
+/* Account centre, notification controls and cross-platform PWA installation */
+.desktop-utility-bar{display:flex;align-items:center;justify-content:flex-end;gap:12px;min-height:48px;margin:-12px 0 22px;padding:0 2px}
+.desktop-utility-spacer{flex:1}
+.utility-button,.utility-profile{display:flex;align-items:center;justify-content:center;gap:9px;min-height:42px;padding:7px 12px;border:1px solid #e0e6f0;border-radius:13px;background:linear-gradient(145deg,#f9fbff,#e9eef6);color:#34435d;box-shadow:4px 4px 9px #cbd3e0,-4px -4px 9px #fff;font-size:13px;font-weight:700}
+.utility-profile{text-align:left}
+.utility-profile>span:last-child{display:grid;gap:2px}
+.utility-profile small{font-size:10px;color:#8290a5;font-weight:500;text-transform:capitalize}
+.account-avatar{display:grid;place-items:center;width:30px;height:30px;border-radius:50%;background:linear-gradient(135deg,#6679e4,#4053bd);color:#fff;font-weight:800}
+.install-utility{color:#fff;background:linear-gradient(135deg,#596cdb,#4053bf);border-color:#5265d0}
+.mobile-install{display:grid;place-items:center;flex:0 0 36px;width:36px;height:36px;border:1px solid #dce3f0;border-radius:11px;background:#e9edff;color:#4659c4;font-size:20px;font-weight:800}
+.mobile-action{position:relative;display:grid;place-items:center;flex:0 0 40px;width:40px;height:40px;border:1px solid #e0e6f0;border-radius:12px;background:linear-gradient(145deg,#f9fbff,#e9eef6);color:#34435d;font-size:19px;box-shadow:4px 4px 9px #cbd3e0,-4px -4px 9px #fff}
+.mobile-action i{position:absolute;right:8px;top:7px;width:7px;height:7px;border-radius:50%;background:#e28a39;box-shadow:0 0 0 2px #f4f6fb}
+.mobile-account{padding:3px!important}
+.mobile-account .account-avatar{width:29px;height:29px}
+.notification-panel{position:fixed;z-index:80;right:18px;top:76px;width:min(390px,calc(100vw - 28px));padding:17px;border:1px solid #e0e6f0;border-radius:17px;background:#f3f6fb;box-shadow:0 18px 45px rgba(23,37,62,.2)}
+.notification-panel-head{display:flex;justify-content:space-between;align-items:center;font-size:16px;color:#1c2b45}
+.notification-panel-head button,.install-help-close{border:0;background:transparent;color:#6c7890;font-size:24px}
+.notification-note{margin:5px 0 12px;color:#7b879b;font-size:12px}
+.notification-setting,.account-notification-row{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 0;border-top:1px solid #e0e6f0}
+.notification-setting>span,.account-notification-row>div{min-width:0;display:grid;gap:4px}
+.notification-setting strong,.account-notification-row strong{font-size:12px;color:#273650}
+.notification-setting small,.account-notification-row small{font-size:11px;line-height:1.45;color:#78869b}
+.install-help-backdrop{position:fixed;inset:0;z-index:100;display:grid;place-items:center;padding:18px;background:rgba(17,29,49,.58);backdrop-filter:blur(7px)}
+.install-help-dialog{position:relative;width:min(100%,420px);padding:28px;border:1px solid #fff;border-radius:20px;background:linear-gradient(145deg,#f8faff,#edf1f7);box-shadow:12px 12px 28px rgba(17,28,48,.2);text-align:center}
+.install-help-close{position:absolute;right:14px;top:10px}
+.install-help-icon{display:grid;place-items:center;width:52px;height:52px;margin:0 auto 12px;border-radius:16px;background:#e5eaff;color:#4b5fd0;font-size:28px}
+.install-help-dialog h2{margin:0 0 10px;font-size:20px}
+.install-help-dialog p{margin:0 0 20px;color:#65728a;font-size:13px;line-height:1.7}
+.account-page{max-width:1120px;margin:0 auto}
+.account-role-pill,.account-status{display:inline-flex;align-items:center;padding:6px 10px;border-radius:999px;background:#e8edff;color:#4659bc;font-size:11px;font-weight:800;text-transform:capitalize}
+.account-grid{display:grid;grid-template-columns:minmax(0,1.15fr) minmax(300px,.85fr);gap:20px;align-items:start}
+.account-side-column{display:grid;gap:20px}
+.account-section-title{display:flex;align-items:center;gap:12px;margin-bottom:18px}
+.account-section-title h2{margin:0 0 3px;font-size:16px}
+.account-section-title p{margin:0;color:#7b879b;font-size:11px}
+.account-section-icon{display:grid;place-items:center;width:38px;height:38px;border-radius:12px;background:#e8edff;color:#4b5fd0;font-size:19px}
+.profile-preview{display:flex;align-items:center;gap:12px;padding:13px;margin-bottom:15px;border-radius:14px;background:#e9eef6;box-shadow:inset 3px 3px 7px #d0d8e5,inset -3px -3px 7px #fff}
+.profile-avatar{display:grid;place-items:center;width:48px;height:48px;border-radius:50%;background:linear-gradient(135deg,#687be6,#4053bd);color:#fff;font-size:20px;font-weight:850}
+.profile-preview strong,.profile-preview small{display:block}
+.profile-preview strong{font-size:13px;color:#263650}
+.profile-preview small{margin-top:3px;font-size:11px;color:#7b879b}
+.account-form{display:grid;gap:7px}
+.account-form label{margin:8px 0;font-size:12px}
+.account-form .field{font-size:13px}
+.optional-label{color:#8a95a8;font-size:10px;font-weight:500}
+.account-consent{padding:12px;border:1px solid #e1e7f0;border-radius:13px;background:#edf1f7}
+.consent-line{display:flex!important;align-items:flex-start;gap:10px;margin:0!important}
+.consent-line input{margin-top:3px}
+.consent-line span{display:grid;gap:4px}
+.consent-line strong{font-size:12px;color:#2c3b55}
+.consent-line small{font-size:11px;line-height:1.55;color:#77849a;font-weight:400}
+.account-footnote{margin:10px 0 0;color:#8a95a8;font-size:10px;line-height:1.6}
+.account-notification-row{align-items:center}
+.account-status{white-space:nowrap}
+@media(max-width:850px){.desktop-utility-bar{display:none}.account-grid{grid-template-columns:1fr}.account-page .page-heading{align-items:center}.notification-panel{top:74px;right:10px}.mobile-bar{gap:8px}.mobile-install{flex-basis:34px;width:34px}}
+@media(min-width:851px){.mobile-bar{display:none!important}}
