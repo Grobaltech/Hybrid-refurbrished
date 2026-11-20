@@ -1,13 +1,15 @@
 <script setup lang="ts">
 import ResourceView from '@/components/ResourceView.vue'
 const fields=[
-  { key: 'username', label: 'User', type: 'text', required: false },
-  { key: 'action', label: 'Action', type: 'text', required: false },
-  { key: 'entity_type', label: 'Record type', type: 'text', required: false },
-  { key: 'entity_id', label: 'Record ID', type: 'number', required: false },
-  { key: 'message', label: 'Details', type: 'textarea', required: false },
-  { key: 'page', label: 'Page', type: 'text', required: false },
-  { key: 'created_at', label: 'Date', type: 'text', required: false }
+ {key:'id',label:'Log ID',readonly:true},
+ {key:'user_id',label:'User ID',readonly:true},
+ {key:'action',label:'Action',readonly:true},
+ {key:'table_name',label:'Table',readonly:true},
+ {key:'record_id',label:'Record ID',readonly:true},
+ {key:'old_data',label:'Previous data',readonly:true},
+ {key:'new_data',label:'New data',readonly:true},
+ {key:'ip_address',label:'IP address',readonly:true},
+ {key:'created_at',label:'Date',readonly:true},
 ]
 </script>
-<template><ResourceView title="Activity" table="audit_logs" :fields="fields" :columns="['id','username','action','entity_type','entity_id','message','page','created_at']" :search-keys="['id', 'username', 'action', 'entity_type', 'entity_id', 'message', 'page', 'created_at']" :can-create="false" :can-edit="false" :can-delete="false"/></template>
+<template><ResourceView title="Activity" table="audit_logs" :fields="fields" :columns="['created_at','user_id','action','table_name','record_id','ip_address','old_data','new_data']" :search-keys="['id','user_id','action','table_name','record_id','ip_address']" :can-create="false" :can-edit="false" :can-delete="false" /></template>
