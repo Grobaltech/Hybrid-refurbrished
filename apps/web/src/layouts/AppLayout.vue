@@ -26,6 +26,7 @@ const links: NavigationLink[] = [
   { label: 'Branch management', path: '/branches', roles: ['admin'], group: 'Shop administration', hint: 'Branches and transfers' },
   { label: 'Users & access', path: '/users', roles: ['admin'], group: 'Shop administration', hint: 'Staff and permissions' },
   { label: 'Activity', path: '/activity', roles: ['admin'], group: 'Shop administration', hint: 'Audit activity' },
+  { label: 'SMS Centre', path: '/sms', roles: ['admin'], group: 'Shop administration', hint: 'Staff SMS announcements' },
   { label: 'Settings', path: '/settings', roles: ['admin'], group: 'Shop administration', hint: 'Configure your shop' },
   { label: 'My account', path: '/account', roles: ['admin','manager','cashier'], group: 'Account', hint: 'Profile and security' }
 ]
