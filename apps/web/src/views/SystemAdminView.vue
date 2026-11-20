@@ -92,6 +92,29 @@ onMounted(async()=>{try{const {data:{user},error:userError}=await supabase.auth.
             </div>
           </div>
 
+          <section id="shops" class="info-panel mb-4">
+            <div class="panel-heading"><span class="panel-icon">⌂</span><div><h3>Shop setup status</h3><p>Live shop workspaces and their configuration progress</p></div></div>
+            <div v-if="overview?.directors.length" class="mt-4 space-y-3">
+              <div v-for="d in overview.directors" :key="d.profile_id" class="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-slate-100 p-3">
+                <div><b class="text-sm">{{d.shop_name||'Shop name not set'}}</b><p class="mt-1 text-xs text-slate-500">Director: {{d.username}} · {{d.email||'No email'}} · {{d.currency||'UGX'}}</p><p class="mt-1 text-xs text-slate-400">{{d.address||'Shop address not provided'}}</p></div>
+                <span class="rounded-full px-3 py-1 text-xs font-semibold" :class="d.setup_completed?'bg-emerald-50 text-emerald-700':'bg-amber-50 text-amber-700'">{{d.setup_completed?'Setup complete':'Awaiting director setup'}}</span>
+              </div>
+            </div><p v-else class="mt-4 text-sm text-slate-500">No shop workspaces have been created yet.</p>
+          </section>
+          <section id="directors" class="info-panel mb-4">
+            <div class="panel-heading"><span class="panel-icon">♙</span><div><h3>Shop director accounts</h3><p>Accounts created by the System Super Admin</p></div></div>
+            <div v-if="overview?.directors.length" class="mt-4 overflow-x-auto"><table class="w-full text-left text-xs"><thead><tr class="border-b text-slate-400"><th class="py-2">Username</th><th>Email</th><th>Created</th><th>Status</th></tr></thead><tbody><tr v-for="d in overview.directors" :key="d.profile_id" class="border-b border-slate-100"><td class="py-3 font-semibold">{{d.username}}</td><td>{{d.email||'—'}}</td><td>{{formatDate(d.created_at)}}</td><td>{{d.disabled?'Disabled':'Active'}}</td></tr></tbody></table></div>
+            <p v-else class="mt-4 text-sm text-slate-500">No Shop Director accounts found.</p>
+          </section>
+          <section id="access" class="info-panel mb-4">
+            <div class="panel-heading"><span class="panel-icon shield">◇</span><div><h3>Security & access overview</h3><p>System roles and current account totals</p></div></div>
+            <div class="mt-4 grid gap-3 sm:grid-cols-3"><div class="rounded-lg bg-slate-50 p-3"><b class="text-sm">System Super Admin</b><p class="mt-1 text-xs text-slate-500">Controls system settings, shop provisioning and platform access.</p></div><div class="rounded-lg bg-slate-50 p-3"><b class="text-sm">Shop Directors · {{overview?.counts.shop_directors??0}}</b><p class="mt-1 text-xs text-slate-500">Manage their own shop, staff and daily operations.</p></div><div class="rounded-lg bg-slate-50 p-3"><b class="text-sm">Managers & Cashiers</b><p class="mt-1 text-xs text-slate-500">{{overview?.counts.managers??0}} managers · {{overview?.counts.cashiers??0}} cashiers.</p></div></div>
+          </section>
+          <section id="activity" class="info-panel mb-4">
+            <div class="panel-heading"><span class="panel-icon">◷</span><div><h3>Recent system activity</h3><p>Latest recorded actions from the audit log</p></div></div>
+            <div v-if="overview?.recent_activity.length" class="mt-4 divide-y divide-slate-100"><div v-for="a in overview.recent_activity" :key="a.id" class="flex flex-wrap items-center justify-between gap-2 py-3 text-xs"><div><b>{{a.action}}</b><span class="ml-2 text-slate-500">{{a.table_name}}</span><p class="mt-1 text-slate-400">{{a.username||'Unknown user'}} · {{a.role||'Unknown role'}}</p></div><time class="text-slate-400">{{formatDate(a.created_at)}}</time></div></div>
+            <p v-else class="mt-4 text-sm text-slate-500">No activity has been recorded yet.</p>
+          </section>
           <div class="bottom-grid">
             <article class="info-panel">
               <div class="panel-heading"><span class="panel-icon">♙</span><div><h3>Shop Director account</h3><p>{{hasDirector?'Shop Director account is registered':'The next account to create'}}</p></div></div>
