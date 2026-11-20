@@ -74,7 +74,7 @@ async function enableBrowserNotifications() {
     <div class="account-grid">
       <div class="panel account-profile-panel">
         <div class="account-section-title"><span class="account-section-icon">◉</span><div><h2>Profile information</h2><p>Keep your contact details up to date.</p></div></div>
-        <div class="profile-preview"><div class="profile-avatar">{{ (fullName || email || 'U').slice(0,1).toUpperCase() }}</div><div><strong>{{ fullName || 'Complete your profile' }}</strong><small>{{ email }}</small></div></div>
+        <div class="profile-preview"><img v-if="avatarUrl" class="profile-avatar profile-avatar-image" :src="avatarUrl" alt="Profile photo"><div v-else class="profile-avatar">{{ (fullName || email || 'U').slice(0,1).toUpperCase() }}</div><div><strong>{{ fullName || 'Complete your profile' }}</strong><small>{{ email }}</small></div></div>
         <form class="account-form" @submit.prevent="saveProfile">
           <label>Full name<input v-model="fullName" class="field" type="text" autocomplete="name" placeholder="Enter your full name" required></label>
           <label>Email address<input :value="email" class="field" type="email" readonly disabled></label>
