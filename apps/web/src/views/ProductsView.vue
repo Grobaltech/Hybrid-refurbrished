@@ -1,5 +1,7 @@
 <script setup lang="ts">
+import { RouterLink } from 'vue-router'
 import ResourceView from '@/components/ResourceView.vue'
+
 const fields = [
   { key: 'sku', label: 'SKU', type: 'text', required: true },
   { key: 'name', label: 'Product name', type: 'text', required: true },
@@ -12,4 +14,24 @@ const fields = [
   { key: 'active', label: 'Active', type: 'checkbox', defaultValue: true },
 ]
 </script>
-<template><ResourceView title="Products" table="products" :fields="fields" :columns="['sku','name','category','selling_price','quantity','minimum_stock','active']" :search-keys="['sku','name','category','barcode']" :can-delete="false" /></template>
+
+<template>
+  <section class="page-wrap">
+    <div class="page-heading">
+      <div>
+        <h1>Products</h1>
+        <p>Manage this shop's product catalogue, prices and stock quantities.</p>
+      </div>
+      <RouterLink to="/products/new" class="btn primary">＋ Add product</RouterLink>
+    </div>
+    <ResourceView
+      title="Product catalogue"
+      table="products"
+      :fields="fields"
+      :columns="['sku','name','category','selling_price','quantity','minimum_stock','active']"
+      :search-keys="['sku','name','category','barcode']"
+      :can-create="false"
+      :can-delete="false"
+    />
+  </section>
+</template>
