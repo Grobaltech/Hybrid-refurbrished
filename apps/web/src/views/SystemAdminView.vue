@@ -39,7 +39,17 @@ async function createShopDirector() {
     shopDirectorExists.value = true
     directorPassword.value = ''
   } catch (cause: unknown) {
-    directorError.value = cause instanceof Error ? cause.message : 'Could not create the Shop Director account.'
+    const response = (cause as { context?: Response })?.context
+    if (response) {
+      try {
+        const payload = await response.clone().json()
+        directorError.value = payload?.error || payload?.message || 'The server rejected the request. Check the account details and try again.'
+      } catch {
+        directorError.value = cause instanceof Error ? cause.message : 'Could not create the Shop Director account.'
+      }
+    } else {
+      directorError.value = cause instanceof Error ? cause.message : 'Could not create the Shop Director account.'
+    }
   } finally {
     creatingDirector.value = false
   }
