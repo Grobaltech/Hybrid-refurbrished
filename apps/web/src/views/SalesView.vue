@@ -1,21 +1,21 @@
 <script setup lang="ts">
-import { computed, onMounted, ref } from 'vue'
+import { computed, nextTick, onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { supabase } from '@/lib/supabase'
 import { useAuth } from '@/stores/auth'
 const router = useRouter()
 const auth = useAuth()
-const products = ref<any[]>([]), customers = ref<any[]>([])
+const products = ref<any[]>([]), customers = ref<any[]>([]), barcodeInput = ref<HTMLInputElement | null>(null)
 const cart = ref<{product_id:string;name:string;quantity:number;unit_price:number;stock:number}[]>([])
 const customer = ref<string | null>(null), showCustomer = ref(false), newCustomerName = ref(''), newCustomerPhone = ref('')
 const payment = ref('cash'), taxRate = ref(0), discount = ref(0), notes = ref(''), search = ref(''), busy = ref(false), error = ref('')
 const subtotal = computed(() => cart.value.reduce((sum, item) => sum + item.quantity * item.unit_price, 0))
 const taxAmount = computed(() => subtotal.value * Number(taxRate.value || 0) / 100)
 const total = computed(() => Math.max(0, subtotal.value - Number(discount.value || 0) + taxAmount.value))
-const matches = computed(() => products.value.filter(p => (p.name + ' ' + p.sku).toLowerCase().includes(search.value.toLowerCase())))
+const matches = computed(() => products.value.filter(p => (p.name + ' ' + p.sku + ' ' + (p.barcode ?? '')).toLowerCase().includes(search.value.toLowerCase())))
 async function load() {
   const [p, c] = await Promise.all([
-    supabase.from('products').select('id,sku,name,selling_price,quantity,active').eq('active', true).order('name'),
+    supabase.from('products').select('id,sku,name,barcode,selling_price,quantity,active').eq('active', true).order('name'),
     supabase.from('customers').select('id,name,phone').order('name'),
   ])
   if (p.error) error.value = p.error.message
@@ -23,7 +23,7 @@ async function load() {
   if (c.error) error.value = c.error.message
   else customers.value = c.data ?? []
 }
-function add(p: any) {
+async function add(p: any) {
   const item = cart.value.find(x => x.product_id === p.id)
   if (item) { if (item.quantity < Number(p.quantity)) item.quantity++ }
   else cart.value.push({ product_id: p.id, name: p.name, quantity: 1, unit_price: Number(p.selling_price), stock: Number(p.quantity) })
@@ -58,11 +58,11 @@ async function checkout() {
     await router.push('/receipts/' + data.sale_id)
   } catch (e: any) { error.value = e.message ?? 'Could not complete sale' } finally { busy.value = false }
 }
-onMounted(load)
+onMounted(async () => { await load(); await nextTick(); barcodeInput.value?.focus() })
 </script>
-<template><section class="page-wrap"><div class="page-heading"><div><h1>New sale</h1><p>Build a cart, select a customer and complete a stock-controlled sale.</p></div></div>
+<template><section class="page-wrap"><div class="page-heading"><div><h1>Point of Sale</h1><p>Scan barcodes or search products to build a sale and issue a receipt.</p></div></div>
 <p v-if="error" class="alert">{{ error }}</p><div class="sales-grid">
-<div class="panel"><h2>Products</h2><input v-model="search" class="control" placeholder="Search product or SKU"><div class="product-pick"><button v-for="p in matches" :key="p.id" class="product-option" @click="add(p)"><b>{{ p.name }}</b><span>{{ p.sku }} · UGX {{ Number(p.selling_price).toLocaleString() }}</span><small>{{ p.quantity }} in stock</small></button></div></div>
+<div class="panel"><h2>Scan or find products</h2><label>Barcode scanner<input ref="barcodeInput" class="control" placeholder="Scan barcode then press Enter" autocomplete="off" @keydown.enter.prevent="scanBarcode"></label><p class="muted">Connect a USB/Bluetooth barcode scanner. Most scanners type the barcode and send Enter automatically.</p><input v-model="search" class="control" placeholder="Or search product, SKU or barcode"><div class="product-pick"><button v-for="p in matches" :key="p.id" class="product-option" @click="add(p)"><b>{{ p.name }}</b><span>{{ p.sku }} · UGX {{ Number(p.selling_price).toLocaleString() }}</span><small>{{ p.quantity }} in stock</small></button></div></div>
 <div class="panel"><h2>Sale cart</h2><div v-if="!cart.length" class="empty">No items added yet.</div>
 <div v-for="item in cart" :key="item.product_id" class="cart-line"><div><b>{{ item.name }}</b><small>UGX {{ item.unit_price.toLocaleString() }} each</small></div><input v-model.number="item.quantity" type="number" min="1" :max="item.stock" class="control qty"><b>UGX {{ (item.quantity * item.unit_price).toLocaleString() }}</b><button class="link danger" @click="cart = cart.filter(x => x.product_id !== item.product_id)">×</button></div>
 <label>Customer<select v-model="customer" class="control"><option :value="null">Walk-in customer</option><option v-for="c in customers" :key="c.id" :value="c.id">{{ c.name }} {{ c.phone ? '· ' + c.phone : '' }}</option></select><button v-if="auth.profile?.role !== 'cashier'" type="button" class="link" @click="showCustomer = true">＋ Add new customer</button></label>
