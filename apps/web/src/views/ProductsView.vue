@@ -30,7 +30,7 @@ const fields = [
       :fields="fields"
       :columns="['sku','name','category','selling_price','quantity','minimum_stock','active']"
       :search-keys="['sku','name','category','barcode']"
-      :can-create="false"
+      :can-create="true"
       :can-delete="false"
     />
   </section>
