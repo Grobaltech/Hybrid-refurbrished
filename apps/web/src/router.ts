@@ -6,6 +6,7 @@ const router = createRouter({
   routes: [
     { path: '/login', component: () => import('./views/LoginView.vue') },
     { path: '/system-admin', component: () => import('./views/SystemAdminView.vue') },
+    { path: '/system-settings', component: () => import('./views/SettingsView.vue') },
     { path: '/', component: () => import('./layouts/AppLayout.vue'), children: [
       { path: '', redirect: '/dashboard' },
       { path: 'dashboard', component: () => import('./views/DashboardView.vue') },
@@ -24,7 +25,6 @@ const router = createRouter({
       { path: 'reports', component: () => import('./views/ReportsView.vue'), meta: { roles: ['admin','manager'] } },
       { path: 'balance', component: () => import('./views/BalanceView.vue'), meta: { roles: ['admin'] } },
       { path: 'search', component: () => import('./views/SearchView.vue') },
-      { path: 'settings', component: () => import('./views/SettingsView.vue'), meta: { roles: ['admin'] } },
       { path: 'users', component: () => import('./views/UsersView.vue'), meta: { roles: ['admin'] } },
       { path: 'activity', component: () => import('./views/ActivityView.vue'), meta: { roles: ['admin'] } },
       { path: 'crm', component: () => import('./views/CrmHomeView.vue'), meta: { roles: ['admin'] } },
@@ -45,8 +45,8 @@ router.beforeEach(async (to) => {
   const role = String(profile.role)
 
   if (to.path === '/login' || to.path === '/') return role === 'super_admin' ? '/system-admin' : '/dashboard'
-  if (role === 'super_admin') return to.path === '/system-admin' ? true : '/system-admin'
-  if (to.path === '/system-admin') return '/dashboard'
+  if (role === 'super_admin') return ['/system-admin','/system-settings'].includes(to.path) ? true : '/system-admin'
+  if (to.path === '/system-admin' || to.path === '/system-settings') return '/forbidden'
 
   const { data: override, error: accessError } = await supabase.from('user_page_access')
     .select('allowed').eq('user_id', session.user.id).eq('page', to.path).maybeSingle()
