@@ -3,14 +3,14 @@ import { computed, onMounted, ref, watch } from 'vue'
 import { supabase } from '@/lib/supabase'
 import { useAuth } from '@/stores/auth'
 
-type Field = { key:string; label:string; type?:string; required?:boolean; options?:string[]; readonly?:boolean }
+type Field = { key:string; label:string; type?:string; required?:boolean; options?:string[]; readonly?:boolean; defaultValue?:any }
 const props = defineProps<{ title:string; table:string; fields:Field[]; columns?:string[]; searchKeys?:string[]; canDelete?:boolean; orderBy?:string; limit?:number; description?:string; canCreate?:boolean; canEdit?:boolean; sourceTable?:string; primaryKey?:string }>()
 const auth = useAuth()
 const rows = ref<any[]>([]), loading = ref(false), saving = ref(false), error = ref(''), query = ref('')
 const editing = ref<any|null>(null), form = ref<Record<string,any>>({})
 const visibleFields = computed(()=>props.fields.filter(f=>!f.readonly))
 const filtered = computed(()=>{ const q=query.value.trim().toLowerCase(); if(!q)return rows.value; return rows.value.filter(r=>(props.searchKeys?.length?props.searchKeys:Object.keys(r)).some(k=>String(r[k]??'').toLowerCase().includes(q))) })
-function start(row?:any){ editing.value=row??null; form.value={}; for(const f of visibleFields.value) form.value[f.key]=row?.[f.key]??(f.type==='number'?0:f.type==='checkbox'?true:''); error.value='' }
+function start(row?:any){ editing.value=row??null; form.value={}; for(const f of visibleFields.value) form.value[f.key]=row?.[f.key]??f.defaultValue??(f.type==='number'?0:f.type==='checkbox'?false:''); error.value='' }
 async function load(){ loading.value=true; error.value=''; try { let req=supabase.from(props.sourceTable??props.table).select('*').order(props.orderBy??'created_at',{ascending:false}).limit(props.limit??250); const {data,error:e}=await req; if(e)throw e; rows.value=data??[] } catch(e:any){error.value=e.message??'Unable to load records'} finally{loading.value=false} }
 async function save(){ saving.value=true; error.value=''; try { const payload={...form.value}; for(const f of visibleFields.value){if(f.type==='number' && payload[f.key]!=='' )payload[f.key]=Number(payload[f.key]); if(payload[f.key]==='')payload[f.key]=null} if(editing.value){const {error:e}=await supabase.from(props.table).update(payload).eq(props.primaryKey??'id',editing.value[props.primaryKey??'id']);if(e)throw e}else{const {error:e}=await supabase.from(props.table).insert(payload);if(e)throw e} editing.value=null; form.value={}; await load() }catch(e:any){error.value=e.message??'Save failed'}finally{saving.value=false} }
 async function remove(row:any){if(!confirm(`Delete this ${props.title.toLowerCase()} record?`))return; const {error:e}=await supabase.from(props.table).delete().eq(props.primaryKey??'id',row[props.primaryKey??'id']); if(e)error.value=e.message;else await load()}
