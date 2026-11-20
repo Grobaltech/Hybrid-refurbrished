@@ -2,90 +2,20 @@
 import { computed, onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { supabase } from '@/lib/supabase'
-
-const router = useRouter()
-const loading = ref(true)
-const loadError = ref('')
-const email = ref('')
-const shopDirectorExists = ref(false)
-const directorUsername = ref('')
-const directorEmail = ref('')
-const directorPassword = ref('')
-const creatingDirector = ref(false)
-const directorError = ref('')
-const directorSuccess = ref('')
-const checking = ref(true)
-
-async function createShopDirector() {
-  directorError.value = ''
-  directorSuccess.value = ''
-  if (directorPassword.value.length < 10) {
-    directorError.value = 'Use a password with at least 10 characters.'
-    return
-  }
-  creatingDirector.value = true
-  try {
-    const { data, error } = await supabase.functions.invoke('smooth-processor', {
-      body: {
-        action: 'create_shop_director',
-        username: directorUsername.value,
-        email: directorEmail.value,
-        password: directorPassword.value,
-      },
-    })
-    if (error) throw error
-    if (data?.error) throw new Error(data.error)
-    directorSuccess.value = 'Shop Director account and shop workspace created. The director can now sign in and complete the shop setup.'
-    shopDirectorExists.value = true
-    directorPassword.value = ''
-  } catch (cause: unknown) {
-    const response = (cause as { context?: Response })?.context
-    if (response) {
-      try {
-        const payload = await response.clone().json()
-        directorError.value = payload?.error || payload?.message || 'The server rejected the request. Check the account details and try again.'
-      } catch {
-        directorError.value = cause instanceof Error ? cause.message : 'Could not create the Shop Director account.'
-      }
-    } else {
-      directorError.value = cause instanceof Error ? cause.message : 'Could not create the Shop Director account.'
-    }
-  } finally {
-    creatingDirector.value = false
-  }
-}
-const initials = computed(() => (email.value.split('@')[0] || 'SA').slice(0, 2).toUpperCase())
-
-onMounted(async () => {
-  try {
-    const { data: { user }, error: userError } = await supabase.auth.getUser()
-    if (userError) throw userError
-    email.value = user?.email ?? ''
-    const { data: profile, error: profileError } = await supabase
-      .from('profiles').select('role,disabled').eq('id', user?.id ?? '').maybeSingle()
-    if (profileError) throw profileError
-    if (!profile || profile.role !== 'super_admin' || profile.disabled) {
-      await supabase.auth.signOut()
-      await router.replace('/login')
-      return
-    }
-
-    const { data: directors, error: directorCheckError } = await supabase
-      .from('profiles').select('id').eq('role', 'admin').limit(1)
-    if (directorCheckError) throw directorCheckError
-    shopDirectorExists.value = Boolean(directors?.length)
-  } catch (cause: unknown) {
-    loadError.value = cause instanceof Error ? cause.message : 'Could not load system information.'
-  } finally {
-    loading.value = false
-    checking.value = false
-  }
-})
-
-async function signOut() {
-  await supabase.auth.signOut()
-  await router.replace('/login')
-}
+type Director={profile_id:string;username:string;email:string|null;disabled:boolean;created_at:string;shop_id:string|null;shop_name:string|null;setup_completed:boolean;phone:string|null;address:string|null;currency:string|null}
+type Activity={id:string;action:string;table_name:string;created_at:string;username:string|null;role:string|null}
+type Overview={counts:{profiles:number;active_users:number;disabled_users:number;shop_directors:number;managers:number;cashiers:number;shops:number;configured_shops:number};directors:Director[];recent_activity:Activity[];generated_at:string}
+const router=useRouter(),loading=ref(true),loadError=ref(''),email=ref(''),overview=ref<Overview|null>(null)
+const directorUsername=ref(''),directorEmail=ref(''),directorPassword=ref(''),creatingDirector=ref(false),directorError=ref(''),directorSuccess=ref(''),refreshing=ref(false)
+const initials=computed(()=> (email.value.split('@')[0]||'SA').slice(0,2).toUpperCase())
+const hasDirector=computed(()=>Boolean(overview.value?.directors?.length))
+const shopConfigured=computed(()=>Boolean(overview.value?.counts.configured_shops))
+const setupProgress=computed(()=>!hasDirector.value?'1 of 3 steps complete':!shopConfigured.value?'2 of 3 steps complete':'3 of 3 steps complete')
+async function refreshOverview(){refreshing.value=true;loadError.value='';try{const {data,error}=await supabase.rpc('system_admin_overview');if(error)throw error;overview.value=data as Overview}catch(e:any){loadError.value=e.message??'Could not load system information.'}finally{refreshing.value=false;loading.value=false}}
+async function createShopDirector(){directorError.value='';directorSuccess.value='';if(directorPassword.value.length<10){directorError.value='Use a password with at least 10 characters.';return}creatingDirector.value=true;try{const {data,error}=await supabase.functions.invoke('smooth-processor',{body:{action:'create_shop_director',username:directorUsername.value,email:directorEmail.value,password:directorPassword.value}});if(error)throw error;if(data?.error)throw new Error(data.error);directorSuccess.value='Shop Director account and shop workspace created. The director can now sign in and complete the shop setup.';directorPassword.value='';await refreshOverview()}catch(cause:any){const response=cause?.context;if(response){try{const payload=await response.clone().json();directorError.value=payload?.error||payload?.message||'The server rejected the request.'}catch{directorError.value=cause?.message??'Could not create the Shop Director account.'}}else directorError.value=cause?.message??'Could not create the Shop Director account.'}finally{creatingDirector.value=false}}
+function formatDate(value:string){return new Date(value).toLocaleString(undefined,{dateStyle:'medium',timeStyle:'short'})}
+async function signOut(){await supabase.auth.signOut();await router.replace('/login')}
+onMounted(async()=>{try{const {data:{user},error:userError}=await supabase.auth.getUser();if(userError)throw userError;email.value=user?.email??'';const {data:profile,error:profileError}=await supabase.from('profiles').select('role,disabled').eq('id',user?.id??'').maybeSingle();if(profileError)throw profileError;if(!profile||profile.role!=='super_admin'||profile.disabled){await supabase.auth.signOut();await router.replace('/login');return}await refreshOverview()}catch(e:any){loadError.value=e.message??'Could not load system information.';loading.value=false}})
 </script>
 
 <template>
