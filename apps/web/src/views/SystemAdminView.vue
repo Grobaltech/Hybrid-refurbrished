@@ -25,7 +25,7 @@ async function createShopDirector() {
   }
   creatingDirector.value = true
   try {
-    const { data, error } = await supabase.functions.invoke('admin-users', {
+    const { data, error } = await supabase.functions.invoke('smooth-processor', {
       body: {
         action: 'create_shop_director',
         username: directorUsername.value,
