@@ -13,7 +13,7 @@ const noteFields = [
 ]
 
 const followupFields = [
-  { key: 'customer_id', label: 'Customer ID', type: 'number', required: true },
+  { key: 'customer_id', label: 'Customer ID', type: 'text', required: true },
   { key: 'due_at', label: 'Due date', type: 'datetime-local', required: true },
   { key: 'subject', label: 'Follow-up subject', required: true },
   { key: 'notes', label: 'Notes', type: 'textarea' },
