@@ -5,7 +5,6 @@ const fields = [
   { key: 'name', label: 'Product name', type: 'text', required: true },
   { key: 'category', label: 'Category', type: 'text' },
   { key: 'barcode', label: 'Barcode', type: 'text' },
-  { key: 'purchase_price', label: 'Purchase price (UGX)', type: 'number', required: true },
   { key: 'selling_price', label: 'Selling price (UGX)', type: 'number', required: true },
   { key: 'quantity', label: 'Stock quantity', type: 'number', required: true },
   { key: 'minimum_stock', label: 'Low-stock threshold', type: 'number', required: true },
