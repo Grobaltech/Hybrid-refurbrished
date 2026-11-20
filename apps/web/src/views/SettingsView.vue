@@ -19,10 +19,11 @@ async function load(){
   if(shopError)throw shopError;if(defError)throw defError
   shop.value=shopData as Shop|null
   definitions.value=(defData??[]).map((d:any)=>({...d,options:Array.isArray(d.options)?d.options.map(String):[]}))
+  values.value={}
+  for(const d of definitions.value) values.value[d.id]=d.default_value ?? (d.input_type==='boolean'?false:'')
   if(shopData){
    const {data:settingData,error:settingError}=await supabase.from('shop_settings').select('setting_id,setting_value').eq('shop_id',shopData.id)
    if(settingError)throw settingError
-   values.value={}
    for(const item of (settingData??[]) as ShopSetting[]) values.value[item.setting_id]=item.setting_value
   }
  }catch(e:any){error.value=e.message??'Unable to load shop settings'}finally{loading.value=false}
@@ -41,6 +42,7 @@ async function saveSetting(d:Definition){
  savingSetting.value=d.id;error.value='';success.value=''
  try{
   let raw=valueFor(d)
+  if(d.required && (raw==='' || raw===null || raw===undefined)) throw new Error(d.label+' is required.')
   let val:unknown=raw
   if(d.input_type==='number' && raw!=='' && raw!==null) val=Number(raw)
   if(d.input_type==='boolean') val=Boolean(raw)
