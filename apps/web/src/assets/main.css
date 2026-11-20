@@ -246,3 +246,38 @@ tbody tr:hover{background:rgba(255,255,255,.55)}
 @media(min-width:851px){.mobile-bar{display:none!important}}
 
 .account-avatar-image,.profile-avatar-image{object-fit:cover;overflow:hidden;border:2px solid #fff}
+
+/* SMS Centre */
+.sms-page{display:grid;gap:18px}
+.sms-stat-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px}
+.sms-stat{padding:17px;display:grid;gap:6px}
+.sms-stat>span,.sms-stat small{font-size:12px;color:#77839a}
+.sms-stat strong{font-size:21px;color:#263653;overflow-wrap:anywhere}
+.sms-content-grid{display:grid;grid-template-columns:minmax(0,1.5fr) minmax(280px,1fr);gap:16px;align-items:start}
+.sms-compose,.sms-setup,.sms-history{padding:20px}
+.sms-section-heading{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:17px}
+.sms-section-heading h2{margin:0;color:#263653;font-size:17px;font-weight:800}
+.sms-section-heading p{margin:5px 0 0;color:#7a879b;font-size:12px;line-height:1.5}
+.sms-icon{display:grid;place-items:center;width:38px;height:38px;border-radius:12px;background:#edf1fb;color:#5265c6;font-size:19px}
+.sms-field-label{display:block;margin:10px 0 7px;color:#45536b;font-size:12px;font-weight:750}
+.sms-message-box{width:100%;min-height:160px;resize:vertical;line-height:1.6}
+.sms-compose-footer{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-top:12px}
+.sms-compose-footer small{color:#8792a5;font-size:11px}
+.sms-count-warning{color:#b45309!important}
+.sms-footnote{font-size:11px;line-height:1.55;color:#8a95a8;margin:14px 0 0}
+.sms-setup-status{display:flex;align-items:center;gap:9px;margin:8px 0 12px;color:#33435e;font-size:13px}
+.sms-status-dot{width:9px;height:9px;border-radius:50%;background:#d69b39}
+.sms-status-dot.is-ready{background:#18a66a;box-shadow:0 0 0 4px #18a66a1a}
+.sms-setup>p,.sms-setup ol{font-size:12px;line-height:1.65;color:#718097}
+.sms-setup ol{padding-left:19px}
+.sms-secret-list{display:grid;gap:7px;padding:12px;border-radius:12px;background:#edf1f8;box-shadow:inset 3px 3px 7px #d4dce8,inset -3px -3px 7px #fff}
+.sms-secret-list code{font-size:11px;color:#3f51a8}
+.sms-secret-list small{font-size:10px;color:#8994a6}
+.sms-setup>a{display:inline-block;margin-top:12px;color:#5366c9;font-size:12px;font-weight:700}
+.sms-empty{padding:28px 12px;text-align:center;color:#8490a4;font-size:13px}
+.sms-table-wrap{overflow-x:auto}
+.sms-table{min-width:650px}
+.sms-message-cell{max-width:330px;white-space:normal}
+.sms-status-pill{display:inline-block;padding:4px 8px;border-radius:20px;background:#edf1f8;color:#53627b;font-size:10px;font-weight:750}
+@media(max-width:900px){.sms-stat-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.sms-content-grid{grid-template-columns:1fr}}
+@media(max-width:520px){.sms-stat-grid{gap:9px}.sms-stat{padding:13px}.sms-stat strong{font-size:17px}.sms-compose,.sms-setup,.sms-history{padding:15px}.sms-compose-footer{align-items:stretch;flex-direction:column}.sms-compose-footer .btn{width:100%}}
