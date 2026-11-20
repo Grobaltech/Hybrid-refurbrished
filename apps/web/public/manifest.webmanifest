@@ -2,15 +2,46 @@
   "id": "/",
   "name": "Hybrid Shop Management",
   "short_name": "Hybrid Shop",
-  "description": "Hybrid Shop point of sale and business management",
+  "description": "Cross-platform point of sale, inventory and business management for Hybrid Shop.",
   "lang": "en",
+  "dir": "ltr",
   "start_url": "/",
   "scope": "/",
   "display": "standalone",
+  "display_override": [
+    "window-controls-overlay",
+    "standalone",
+    "minimal-ui",
+    "browser"
+  ],
   "orientation": "any",
   "background_color": "#111827",
   "theme_color": "#111827",
   "categories": ["business", "finance", "productivity"],
+  "prefer_related_applications": false,
+  "launch_handler": {
+    "client_mode": ["navigate-existing", "auto"]
+  },
+  "shortcuts": [
+    {
+      "name": "Point of Sale",
+      "short_name": "POS",
+      "description": "Open the Hybrid Shop point of sale",
+      "url": "/pos",
+      "icons": [
+        { "src": "/icons/icon-192.png", "sizes": "192x192", "type": "image/png" }
+      ]
+    },
+    {
+      "name": "Products and Inventory",
+      "short_name": "Products",
+      "description": "Manage products and inventory",
+      "url": "/products",
+      "icons": [
+        { "src": "/icons/icon-192.png", "sizes": "192x192", "type": "image/png" }
+      ]
+    }
+  ],
   "icons": [
     {
       "src": "/icons/icon-192.png",
