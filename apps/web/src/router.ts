@@ -26,6 +26,7 @@ const router = createRouter({
       { path: 'reports', component: () => import('./views/ReportsView.vue'), meta: { roles: ['admin','manager'] } },
       { path: 'balance', component: () => import('./views/BalanceView.vue'), meta: { roles: ['admin'] } },
       { path: 'search', component: () => import('./views/SearchView.vue') },
+      { path: 'branches', component: () => import('./views/BranchesView.vue'), meta: { roles: ['admin'] } },
       { path: 'users', component: () => import('./views/UsersView.vue'), meta: { roles: ['admin'] } },
       { path: 'activity', component: () => import('./views/ActivityView.vue'), meta: { roles: ['admin'] } },
       { path: 'crm', component: () => import('./views/CrmHomeView.vue'), meta: { roles: ['admin'] } },
