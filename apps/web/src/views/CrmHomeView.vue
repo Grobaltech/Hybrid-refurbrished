@@ -8,7 +8,7 @@ const customerFields = [
 ]
 
 const noteFields = [
-  { key: 'customer_id', label: 'Customer ID', type: 'number', required: true },
+  { key: 'customer_id', label: 'Customer ID (UUID)', type: 'text', required: true },
   { key: 'note', label: 'Contact note', type: 'textarea', required: true },
 ]
 
