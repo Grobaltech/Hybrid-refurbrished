@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, onMounted, ref } from 'vue'
+import { computed, onMounted, onBeforeUnmount, ref } from 'vue'
 import { RouterLink, RouterView, useRoute, useRouter } from 'vue-router'
 import { useAuth } from '@/stores/auth'
 import { supabase } from '@/lib/supabase'
@@ -31,7 +31,40 @@ const links: NavigationLink[] = [
 ]
 const role = computed(() => String(auth.profile?.role ?? 'cashier'))
 const visible = computed(() => links.filter(link => link.roles.includes(role.value) && auth.profile?.pageAccess?.[link.path] !== false))
+
 const mobileMenuOpen = ref(false)
+const installPrompt = ref<any>(null)
+const installState = ref<'available'|'installed'|'unavailable'>('unavailable')
+const installBusy = ref(false)
+const notificationsOpen = ref(false)
+const notificationPermission = ref<NotificationPermission>(typeof Notification === 'undefined' ? 'default' : Notification.permission)
+const displayName = computed(() => String(auth.profile?.full_name || auth.profile?.name || auth.user?.email?.split('@')[0] || 'My account'))
+function onBeforeInstallPrompt(event: Event) {
+  event.preventDefault()
+  installPrompt.value = event
+  installState.value = 'available'
+}
+function onAppInstalled() {
+  installPrompt.value = null
+  installState.value = 'installed'
+}
+async function installApp() {
+  if (!installPrompt.value || installBusy.value) return
+  installBusy.value = true
+  try {
+    await installPrompt.value.prompt()
+    const choice = await installPrompt.value.userChoice
+    if (choice?.outcome === 'accepted') installState.value = 'installed'
+    installPrompt.value = null
+  } finally { installBusy.value = false }
+}
+async function enableBrowserNotifications() {
+  if (typeof Notification === 'undefined') return
+  notificationPermission.value = await Notification.requestPermission()
+}
+function toggleNotifications() { notificationsOpen.value = !notificationsOpen.value }
+function closeNotifications() { notificationsOpen.value = false }
+
 const menuSearch = ref('')
 const filteredGroups = computed(() => {
   const q = menuSearch.value.trim().toLowerCase()
@@ -62,7 +95,19 @@ async function logout() {
   await auth.signOut()
   await router.replace('/login')
 }
-onMounted(async () => { await auth.loadProfile(); await loadBranches() })
+
+onMounted(async () => {
+  await auth.loadProfile()
+  await loadBranches()
+  window.addEventListener('beforeinstallprompt', onBeforeInstallPrompt)
+  window.addEventListener('appinstalled', onAppInstalled)
+  if (window.matchMedia('(display-mode: standalone)').matches || (navigator as any).standalone) installState.value = 'installed'
+})
+onBeforeUnmount(() => {
+  window.removeEventListener('beforeinstallprompt', onBeforeInstallPrompt)
+  window.removeEventListener('appinstalled', onAppInstalled)
+})
+
 </script>
 
 <template>
@@ -89,6 +134,7 @@ onMounted(async () => { await auth.loadProfile(); await loadBranches() })
     </aside>
 
     <header class="mobile-bar">
+      <button v-if="installState === 'available'" class="mobile-install" aria-label="Install Hybrid Shop" @click="installApp" :disabled="installBusy">↓</button>
       <button class="mobile-menu-trigger" aria-label="Open navigation menu" :aria-expanded="mobileMenuOpen" @click="mobileMenuOpen = true">
         <span class="hamburger-lines"><i></i><i></i><i></i></span>
       </button>
@@ -96,9 +142,19 @@ onMounted(async () => { await auth.loadProfile(); await loadBranches() })
         <span class="brand-mark">H</span>
         <span><strong>Hybrid Shop</strong><small>{{ currentPage }}</small></span>
       </RouterLink>
-      <button class="mobile-account" aria-label="Open my account" @click="router.push('/account')"> <span>●</span> </button>
+      <button class="mobile-action" aria-label="Notifications" :aria-expanded="notificationsOpen" @click="toggleNotifications"><span>♧</span><i v-if="notificationPermission !== 'granted'"></i></button>
+      <button class="mobile-account" aria-label="Open my profile" @click="router.push('/account')"><span class="account-avatar">{{ displayName.slice(0,1).toUpperCase() }}</span></button>
     </header>
 
+    <Transition name="mobile-menu-fade">
+      <div v-if="notificationsOpen" class="notification-panel">
+        <div class="notification-panel-head"><strong>Notifications</strong><button @click="closeNotifications" aria-label="Close notifications">×</button></div>
+        <p class="notification-note">Stay updated about activity in your shop.</p>
+        <div class="notification-setting"><span><strong>Browser notifications</strong><small>{{ notificationPermission === 'granted' ? 'Enabled on this device' : notificationPermission === 'denied' ? 'Blocked in browser settings' : 'Not enabled yet' }}</small></span><button class="btn primary" :disabled="notificationPermission !== 'default'" @click="enableBrowserNotifications">{{ notificationPermission === 'granted' ? 'Enabled' : 'Enable' }}</button></div>
+        <div class="notification-setting"><span><strong>SMS updates</strong><small>Manage your phone number and SMS consent in your profile.</small></span><button class="btn" @click="closeNotifications();router.push('/account')">Profile</button></div>
+        <div v-if="installState === 'available'" class="notification-setting"><span><strong>Install Hybrid Shop</strong><small>Add the app to this device.</small></span><button class="btn primary" :disabled="installBusy" @click="installApp">Install</button></div>
+      </div>
+    </Transition>
     <Transition name="mobile-menu-fade">
       <button v-if="mobileMenuOpen" class="mobile-menu-backdrop" aria-label="Close navigation menu" @click="closeMobileMenu"></button>
     </Transition>
@@ -143,6 +199,12 @@ onMounted(async () => { await auth.loadProfile(); await loadBranches() })
       </aside>
     </Transition>
 
+    <div class="desktop-utility-bar">
+      <div class="desktop-utility-spacer"></div>
+      <button v-if="installState === 'available'" class="utility-button install-utility" @click="installApp" :disabled="installBusy">↓ Install app</button>
+      <button class="utility-button" aria-label="Notifications" @click="toggleNotifications">♧</button>
+      <button class="utility-profile" @click="router.push('/account')"><span class="account-avatar">{{ displayName.slice(0,1).toUpperCase() }}</span><span>{{ displayName }}<small>{{ role.replace('_',' ') }}</small></span></button>
+    </div>
     <main class="main-area">
       <RouterView :key="String(auth.profile?.branch_id || 'unassigned')" />
     </main>
