@@ -4,14 +4,17 @@ import { useRouter } from 'vue-router'
 import { supabase } from '@/lib/supabase'
 type Director={profile_id:string;username:string;email:string|null;disabled:boolean;created_at:string;shop_id:string|null;shop_name:string|null;setup_completed:boolean;phone:string|null;address:string|null;currency:string|null}
 type Activity={id:string;action:string;table_name:string;created_at:string;username:string|null;role:string|null}
+type SystemAccount={id:string;username:string;email:string|null;phone:string|null;role:string;disabled:boolean;created_at:string;shop_id:string|null;shop_name:string|null}
 type Overview={counts:{profiles:number;active_users:number;disabled_users:number;shop_directors:number;managers:number;cashiers:number;shops:number;configured_shops:number};directors:Director[];recent_activity:Activity[];generated_at:string}
-const router=useRouter(),loading=ref(true),loadError=ref(''),email=ref(''),overview=ref<Overview|null>(null)
+const router=useRouter(),loading=ref(true),loadError=ref(''),email=ref(''),overview=ref<Overview|null>(null),accounts=ref<SystemAccount[]>([]),accountSearch=ref(''),accountFilter=ref('all'),accountBusyId=ref('')
 const directorUsername=ref(''),directorEmail=ref(''),directorPassword=ref(''),creatingDirector=ref(false),directorError=ref(''),directorSuccess=ref(''),refreshing=ref(false)
 const initials=computed(()=> (email.value.split('@')[0]||'SA').slice(0,2).toUpperCase())
 const hasDirector=computed(()=>Boolean(overview.value?.directors?.length))
+const filteredAccounts=computed(()=>accounts.value.filter(a=>{const q=accountSearch.value.trim().toLowerCase();const matches=!q||[a.username,a.email??'',a.phone??'',a.shop_name??'',a.role].some(v=>v.toLowerCase().includes(q));return matches&&(accountFilter.value==='all'||(accountFilter.value==='active'?!a.disabled:accountFilter.value==='suspended'?a.disabled:a.role===accountFilter.value))}))
 const shopConfigured=computed(()=>Boolean(overview.value?.counts.configured_shops))
 const setupProgress=computed(()=>!hasDirector.value?'1 of 3 steps complete':!shopConfigured.value?'2 of 3 steps complete':'3 of 3 steps complete')
-async function refreshOverview(){refreshing.value=true;loadError.value='';try{const {data,error}=await supabase.rpc('system_admin_overview');if(error)throw error;overview.value=data as Overview}catch(e:any){loadError.value=e.message??'Could not load system information.'}finally{refreshing.value=false;loading.value=false}}
+async function refreshOverview(){refreshing.value=true;loadError.value='';try{const [overviewResult,accountsResult]=await Promise.all([supabase.rpc('system_admin_overview'),supabase.rpc('system_admin_accounts')]);if(overviewResult.error)throw overviewResult.error;if(accountsResult.error)throw accountsResult.error;overview.value=overviewResult.data as Overview;accounts.value=(accountsResult.data??[]) as SystemAccount[]}catch(e:any){loadError.value=e.message??'Could not load system information.'}finally{refreshing.value=false;loading.value=false}}
+async function toggleAccountStatus(account:SystemAccount){const nextStatus=!account.disabled;const confirmed=window.confirm(`${nextStatus?'Suspend':'Reactivate'} the account for ${account.username}?`);if(!confirmed)return;accountBusyId.value=account.id;loadError.value='';try{const {error}=await supabase.rpc('system_admin_set_account_disabled',{p_user_id:account.id,p_disabled:nextStatus});if(error)throw error;await refreshOverview()}catch(e:any){loadError.value=e.message??'Could not update account status.'}finally{accountBusyId.value=''}}
 async function createShopDirector(){directorError.value='';directorSuccess.value='';if(directorPassword.value.length<10){directorError.value='Use a password with at least 10 characters.';return}creatingDirector.value=true;try{const {data,error}=await supabase.functions.invoke('smooth-processor',{body:{action:'create_shop_director',username:directorUsername.value,email:directorEmail.value,password:directorPassword.value}});if(error)throw error;if(data?.error)throw new Error(data.error);directorSuccess.value='Shop Director account and shop workspace created. The director can now sign in and complete the shop setup.';directorPassword.value='';await refreshOverview()}catch(cause:any){const response=cause?.context;if(response){try{const payload=await response.clone().json();directorError.value=payload?.error||payload?.message||'The server rejected the request.'}catch{directorError.value=cause?.message??'Could not create the Shop Director account.'}}else directorError.value=cause?.message??'Could not create the Shop Director account.'}finally{creatingDirector.value=false}}
 function formatDate(value:string){return new Date(value).toLocaleString(undefined,{dateStyle:'medium',timeStyle:'short'})}
 async function signOut(){await supabase.auth.signOut();await router.replace('/login')}
@@ -29,7 +32,7 @@ onMounted(async()=>{try{const {data:{user},error:userError}=await supabase.auth.
       <a class="system-nav active" href="/system-admin"><span>◫</span> Overview</a>
       <a class="system-nav" href="/system-settings"><span>⚙</span> Shop setting options</a>
       <div class="sidebar-caption spaced">MANAGEMENT</div>
-      <a class="system-nav" href="#shops"><span>▣</span> Shop setup</a>
+      <a class="system-nav" href="#accounts"><span>♙</span> Account management</a>\n      <a class="system-nav" href="#shops"><span>▣</span> Shop setup</a>
       <a class="system-nav" href="#directors"><span>♙</span> Shop directors</a>
       <a class="system-nav" href="#access"><span>⌘</span> Security & access</a>
       <a class="system-nav" href="#activity"><span>◷</span> Activity logs</a>
@@ -92,6 +95,32 @@ onMounted(async()=>{try{const {data:{user},error:userError}=await supabase.auth.
             </div>
           </div>
 
+          <section id="accounts" class="info-panel mb-4">
+            <div class="panel-heading"><span class="panel-icon">♙</span><div><h3>System account management</h3><p>Search all accounts, inspect their shop association and suspend or reactivate access</p></div></div>
+            <div class="mt-4 flex flex-wrap gap-3">
+              <input v-model="accountSearch" type="search" placeholder="Search username, email, phone or shop" class="min-w-[220px] flex-1 rounded-lg border border-slate-200 px-3 py-2 text-xs outline-none focus:border-indigo-400">
+              <select v-model="accountFilter" class="rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs">
+                <option value="all">All accounts</option><option value="active">Active</option><option value="suspended">Suspended</option><option value="admin">Shop Directors</option><option value="manager">Managers</option><option value="cashier">Cashiers</option><option value="super_admin">System Super Admin</option>
+              </select>
+            </div>
+            <div class="mt-4 overflow-x-auto">
+              <table class="w-full min-w-[720px] text-left text-xs">
+                <thead><tr class="border-b text-slate-400"><th class="py-3">Account</th><th>Role</th><th>Shop</th><th>Created</th><th>Status</th><th class="text-right">Access control</th></tr></thead>
+                <tbody>
+                  <tr v-for="account in filteredAccounts" :key="account.id" class="border-b border-slate-100">
+                    <td class="py-3"><b>{{account.username}}</b><p class="mt-1 text-slate-400">{{account.email||account.phone||'No contact details'}}</p></td>
+                    <td class="capitalize">{{account.role.replace('_',' ')}}</td>
+                    <td>{{account.shop_name||'—'}}</td>
+                    <td>{{formatDate(account.created_at)}}</td>
+                    <td><span class="rounded-full px-2 py-1 text-[10px] font-semibold" :class="account.disabled?'bg-rose-50 text-rose-700':'bg-emerald-50 text-emerald-700'">{{account.disabled?'Suspended':'Active'}}</span></td>
+                    <td class="text-right"><button v-if="account.role!=='super_admin'" class="rounded-md border px-3 py-2 text-[10px] font-semibold" :class="account.disabled?'border-emerald-200 text-emerald-700 hover:bg-emerald-50':'border-rose-200 text-rose-700 hover:bg-rose-50'" :disabled="accountBusyId===account.id" @click="toggleAccountStatus(account)">{{accountBusyId===account.id?'Saving…':account.disabled?'Reactivate':'Suspend'}}</button><span v-else class="text-slate-400">Protected</span></td>
+                  </tr>
+                  <tr v-if="!filteredAccounts.length"><td colspan="6" class="py-8 text-center text-slate-400">No accounts match this search.</td></tr>
+                </tbody>
+              </table>
+            </div>
+            <p class="mt-3 text-[10px] text-slate-400">The System Super Admin account is protected. Shop Directors remain responsible for creating and managing their own shop staff; system suspension is controlled here.</p>
+          </section>
           <section id="shops" class="info-panel mb-4">
             <div class="panel-heading"><span class="panel-icon">⌂</span><div><h3>Shop setup status</h3><p>Live shop workspaces and their configuration progress</p></div></div>
             <div v-if="overview?.directors.length" class="mt-4 space-y-3">
