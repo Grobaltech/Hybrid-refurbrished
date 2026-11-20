@@ -5,3 +5,104 @@
 .app-shell{min-height:100vh}.sidebar{position:fixed;inset:0 auto 0 0;width:258px;background:#101a2c;color:#fff;padding:22px 16px;display:flex;flex-direction:column;z-index:10}.brand{display:flex;align-items:center;gap:12px;color:#fff;text-decoration:none;font-size:19px;font-weight:800;padding:5px 8px 24px}.brand small{display:block;font-size:11px;color:#9aa8bc;font-weight:400;margin-top:3px}.brand-mark{display:grid;place-items:center;width:38px;height:38px;border-radius:11px;background:#5265d8}.side-nav{display:grid;gap:4px;overflow:auto}.side-nav a,.side-bottom a,.side-bottom button{color:#c2ccda;text-decoration:none;padding:10px 12px;border-radius:8px;font-size:13px;text-align:left;background:none;border:0}.side-nav a.router-link-active,.side-nav a:hover,.side-bottom a:hover,.side-bottom button:hover{background:#263550;color:#fff}.side-bottom{margin-top:auto;display:grid;gap:5px;border-top:1px solid #2a3850;padding-top:14px}.role-label{color:#8fa0b8;text-transform:capitalize;font-size:11px;padding:0 12px}.main-area{margin-left:258px;min-height:100vh;padding:30px;max-width:1800px}.mobile-bar{display:none}
 .page-wrap{max-width:1400px;margin:auto}.page-heading{display:flex;align-items:center;justify-content:space-between;gap:16px;margin-bottom:22px}.page-heading h1{font-size:27px;margin:0 0 5px;font-weight:750}.page-heading p{margin:0;color:#667085;font-size:14px}.panel{background:#fff;border:1px solid #e5e9f0;border-radius:14px;padding:20px;box-shadow:0 5px 22px #10182808}.panel h2{font-size:17px;margin:0 0 15px}.control{width:100%;border:1px solid #d8dee8;border-radius:8px;padding:10px 12px;background:#fff;margin-top:6px;min-width:0}.control:focus{outline:2px solid #c7d0ff;border-color:#6879d8}label{display:block;font-size:13px;font-weight:600;color:#344054;margin:12px 0}.btn{border:1px solid #d0d5dd;border-radius:8px;padding:9px 14px;background:#fff;color:#344054;font-size:13px;font-weight:650}.btn.primary{background:#4355c5;color:#fff;border-color:#4355c5}.btn:disabled{opacity:.5;cursor:not-allowed}.btn.full{width:100%;margin-top:14px}.link{background:none;border:0;color:#4355c5;padding:4px;font-size:13px}.danger{color:#d92d20}.alert,.success{padding:11px 14px;border-radius:8px;margin:12px 0;background:#fff0f0;color:#b42318;font-size:13px}.success{background:#ecfdf3;color:#027a48}.empty{color:#667085;padding:24px;text-align:center;font-size:13px}.table-scroll{overflow:auto;width:100%}table{width:100%;border-collapse:collapse;white-space:nowrap}th{text-align:left;color:#667085;font-size:11px;text-transform:uppercase;letter-spacing:.04em;padding:12px;border-bottom:1px solid #e6eaf0}td{padding:13px 12px;border-bottom:1px solid #eef0f4;font-size:13px}.mt{margin-top:20px}.search{max-width:420px}.sales-grid{display:grid;grid-template-columns:minmax(0,1fr) minmax(340px,1fr);gap:18px}.product-pick{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px;margin-top:12px;max-height:560px;overflow:auto}.product-option{display:grid;text-align:left;gap:5px;border:1px solid #e5e9f0;background:#fff;border-radius:9px;padding:12px}.product-option:hover{border-color:#6475dc;background:#f8f9ff}.product-option span,.product-option small,.cart-line small{color:#667085;font-size:11px}.cart-line{display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid #eef0f4;font-size:12px}.cart-line>div{flex:1;min-width:0}.cart-line .qty{width:75px}.totals{display:grid;gap:9px;margin-top:16px}.totals>div{display:flex;justify-content:space-between;font-size:13px}.totals .grand{font-size:17px;border-top:1px solid #e5e9f0;padding-top:12px}.toolbar{display:flex;gap:12px;align-items:end;margin:12px 0 20px}.stats-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:14px;margin:18px 0}.stat{background:#fff;border:1px solid #e5e9f0;border-radius:12px;padding:18px}.stat span{display:block;color:#667085;font-size:12px}.stat strong{display:block;font-size:21px;margin-top:9px}.modal-backdrop{position:fixed;inset:0;background:#10182899;display:grid;place-items:center;padding:18px;z-index:50}.modal{background:#fff;border-radius:14px;padding:22px;width:min(100%,520px);max-height:90vh;overflow:auto}.modal h2{margin-top:0}.modal-actions{display:flex;justify-content:flex-end;gap:10px;margin-top:18px}.receipt{max-width:800px;margin:auto}
 @media(max-width:850px){.sidebar{position:static;width:auto;padding:12px}.brand{padding-bottom:10px}.side-nav{display:flex;overflow:auto}.side-nav a{white-space:nowrap}.side-bottom{display:flex;align-items:center;margin-top:8px;padding-top:8px}.main-area{margin-left:0;padding:16px}.sales-grid{grid-template-columns:1fr}.mobile-bar{display:none}.page-heading h1{font-size:22px}}
+
+/* Hybrid Shop — consistent soft-neumorphic design system */
+:root{
+  color-scheme:light;
+  --hy-bg:#edf1f7;
+  --hy-surface:#f4f6fb;
+  --hy-text:#18243a;
+  --hy-muted:#68758b;
+  --hy-accent:#4b5fd0;
+  --hy-accent-dark:#394bb4;
+  --hy-line:#e0e6f0;
+  --hy-shadow-light:#ffffff;
+  --hy-shadow-dark:#cbd3e1;
+  --hy-raised:7px 7px 18px var(--hy-shadow-dark),-7px -7px 18px var(--hy-shadow-light);
+  --hy-inset:inset 4px 4px 9px #d4dbe7,inset -4px -4px 9px #ffffff;
+}
+html{background:var(--hy-bg)}
+body{background:linear-gradient(145deg,#f3f5fa 0%,#e9eef6 100%);color:var(--hy-text)}
+button,a,input,select,textarea{ -webkit-tap-highlight-color:transparent }
+button{transition:transform .16s ease,box-shadow .16s ease,background-color .16s ease,border-color .16s ease}
+button:focus-visible,a:focus-visible{outline:3px solid #8795ed;outline-offset:3px}
+.main-area{background:transparent}
+.page-wrap{width:100%}
+.page-heading h1,.main-area h1{color:#17243b;letter-spacing:-.035em}
+.page-heading p{color:var(--hy-muted)}
+.panel,.stat,.modal,.modal-card{
+  background:linear-gradient(145deg,#f8faff,#edf1f7);
+  border:1px solid rgba(255,255,255,.9);
+  border-radius:18px;
+  box-shadow:var(--hy-raised);
+}
+.panel{padding:22px}
+.panel h2{color:#1c2a42}
+.stat{border-radius:16px;transition:transform .18s ease,box-shadow .18s ease}
+.stat:hover{transform:translateY(-2px);box-shadow:9px 9px 20px #cbd3e1,-9px -9px 20px #fff}
+.stat strong{color:#1d2b47}
+label{color:#34435d;font-weight:650;line-height:1.45}
+.field,.control,
+input:not([type=checkbox]):not([type=radio]):not([type=range]):not([type=submit]):not([type=button]),
+select,textarea{
+  display:block;width:100%;min-width:0;min-height:44px;
+  margin-top:7px;padding:11px 14px;
+  color:#1d2b43;background:#edf1f7;
+  border:1px solid #e1e7f0;border-radius:12px;
+  box-shadow:var(--hy-inset);
+  outline:none;
+  transition:border-color .18s ease,box-shadow .18s ease,background .18s ease;
+}
+textarea{min-height:92px;resize:vertical}
+.field::placeholder,.control::placeholder,input::placeholder,textarea::placeholder{color:#929db0}
+.field:focus,.control:focus,input:focus,select:focus,textarea:focus{
+  border-color:#8795e7;
+  background:#f5f7fc;
+  box-shadow:inset 2px 2px 5px #d5dce8,inset -2px -2px 5px #fff,0 0 0 3px rgba(91,109,214,.13);
+}
+input[type=checkbox],input[type=radio]{accent-color:var(--hy-accent);width:17px;height:17px;flex:0 0 auto}
+.btn,.btn-primary,.btn-muted{
+  min-height:40px;padding:10px 16px;border:1px solid #e3e8f1;border-radius:12px;
+  color:#3a4962;background:linear-gradient(145deg,#f9fbff,#e9eef6);
+  box-shadow:5px 5px 11px #cbd3e0,-5px -5px 11px #fff;
+  font-size:13px;font-weight:700;
+}
+.btn:hover,.btn-muted:hover{transform:translateY(-1px);box-shadow:6px 6px 13px #c6cfdd,-6px -6px 13px #fff}
+.btn:active,.btn-primary:active,.btn-muted:active{transform:translateY(1px);box-shadow:var(--hy-inset)}
+.btn.primary,.btn-primary{
+  color:#fff;background:linear-gradient(135deg,#596cdb,#4053bf);
+  border-color:#5265d0;box-shadow:5px 5px 12px #c4cce0,-4px -4px 10px #fff;
+}
+.btn.primary:hover,.btn-primary:hover{background:linear-gradient(135deg,#6578e6,#394bb4);box-shadow:6px 7px 15px #bdc7df,-4px -4px 10px #fff}
+.btn:disabled,.btn-primary:disabled,.btn-muted:disabled{opacity:.55;cursor:not-allowed;transform:none;box-shadow:none}
+.link{font-weight:700}
+.alert,.success{border:1px solid transparent;border-radius:12px;box-shadow:0 3px 10px rgba(30,45,75,.04)}
+.alert{background:#fff0f0;border-color:#f8d5d5;color:#a92e32}
+.success{background:#eaf8f0;border-color:#ccebd9;color:#176b45}
+.table-scroll{border-radius:14px}
+table{border-collapse:separate;border-spacing:0}
+th{background:#e9eef6;color:#64718a;font-weight:750}
+th:first-child{border-radius:9px 0 0 0}th:last-child{border-radius:0 9px 0 0}
+td{color:#34435a;border-bottom:1px solid #e4e9f1}
+tbody tr{transition:background .15s ease}
+tbody tr:hover{background:rgba(255,255,255,.55)}
+.product-option{border:1px solid #e1e7f0;background:linear-gradient(145deg,#f8faff,#edf1f7);border-radius:13px;box-shadow:4px 4px 9px #d0d8e5,-4px -4px 9px #fff;transition:transform .16s ease,box-shadow .16s ease}
+.product-option:hover{transform:translateY(-2px);border-color:#aeb9ed;background:#f5f7ff;box-shadow:6px 6px 12px #cbd3e1,-6px -6px 12px #fff}
+.modal-mask,.modal-backdrop{background:rgba(22,32,52,.58);backdrop-filter:blur(7px)}
+.modal,.modal-card{border-radius:20px;padding:24px;box-shadow:12px 12px 28px rgba(17,28,48,.2),-4px -4px 14px rgba(255,255,255,.45)}
+.branch-switcher{box-shadow:inset 3px 3px 7px rgba(0,0,0,.2),inset -2px -2px 6px rgba(255,255,255,.06)}
+.side-nav a,.side-bottom a,.side-bottom button{border-radius:11px;transition:background .16s ease,color .16s ease,transform .16s ease}
+.side-nav a:hover,.side-bottom a:hover,.side-bottom button:hover{transform:translateX(2px)}
+.side-nav a.router-link-active{background:linear-gradient(135deg,#2c3d5b,#202e47);box-shadow:inset 2px 2px 5px rgba(0,0,0,.16),inset -1px -1px 4px rgba(255,255,255,.04)}
+@media(max-width:850px){
+  .main-area{padding:18px 14px 28px}
+  .panel{padding:17px;border-radius:15px}
+  .page-heading{align-items:flex-start}
+  .page-heading h1,.main-area h1{font-size:23px}
+  .field,.control,input:not([type=checkbox]):not([type=radio]):not([type=range]):not([type=submit]):not([type=button]),select,textarea{min-height:46px}
+  .btn,.btn-primary,.btn-muted{min-height:42px}
+}
+@media(prefers-reduced-motion:reduce){
+  *,*::before,*::after{scroll-behavior:auto!important;transition:none!important;animation:none!important}
+}
+
