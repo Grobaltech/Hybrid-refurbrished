@@ -19,12 +19,17 @@ const taxAmount = computed(() => subtotal.value * Number(taxRate.value || 0) / 1
 const total = computed(() => Math.max(0, subtotal.value - Number(discount.value || 0) + taxAmount.value))
 const matches = computed(() => products.value.filter(p => (p.name + ' ' + p.sku + ' ' + (p.barcode ?? '')).toLowerCase().includes(search.value.toLowerCase())))
 async function load() {
-  const [p, c] = await Promise.all([
+  const [p, c, stock] = await Promise.all([
     supabase.from('products').select('id,sku,name,barcode,selling_price,quantity,active').eq('active', true).order('name'),
     supabase.from('customers').select('id,name,phone').order('name'),
+    supabase.from('branch_inventory').select('product_id,quantity').eq('branch_id', String(auth.profile?.branch_id || '')),
   ])
   if (p.error) error.value = p.error.message
-  else products.value = (p.data ?? []).filter(x => Number(x.quantity) > 0)
+  else if (stock.error) error.value = 'Branch stock could not be loaded: ' + stock.error.message
+  else {
+    const branchStock = new Map((stock.data ?? []).map(x => [x.product_id, Number(x.quantity)]))
+    products.value = (p.data ?? []).map(x => ({ ...x, quantity: branchStock.get(x.id) ?? 0 })).filter(x => Number(x.quantity) > 0)
+  }
   if (c.error) error.value = c.error.message
   else customers.value = c.data ?? []
 }
