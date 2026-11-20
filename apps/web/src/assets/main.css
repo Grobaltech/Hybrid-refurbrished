@@ -244,3 +244,5 @@ tbody tr:hover{background:rgba(255,255,255,.55)}
 .account-status{white-space:nowrap}
 @media(max-width:850px){.desktop-utility-bar{display:none}.account-grid{grid-template-columns:1fr}.account-page .page-heading{align-items:center}.notification-panel{top:74px;right:10px}.mobile-bar{gap:8px}.mobile-install{flex-basis:34px;width:34px}}
 @media(min-width:851px){.mobile-bar{display:none!important}}
+
+.account-avatar-image,.profile-avatar-image{object-fit:cover;overflow:hidden;border:2px solid #fff}
