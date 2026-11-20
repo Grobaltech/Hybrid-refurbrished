@@ -145,7 +145,7 @@ onBeforeUnmount(() => {
         <span><strong>Hybrid Shop</strong><small>{{ currentPage }}</small></span>
       </RouterLink>
       <button class="mobile-action" aria-label="Notifications" :aria-expanded="notificationsOpen" @click="toggleNotifications"><span>🔔</span><i v-if="notificationPermission !== 'granted'"></i></button>
-      <button class="mobile-account" aria-label="Open my profile" @click="router.push('/account')"><span class="account-avatar">{{ displayName.slice(0,1).toUpperCase() }}</span></button>
+      <button class="mobile-account" aria-label="Open my profile" @click="router.push('/account')"><img v-if="auth.user?.avatar_url" class="account-avatar account-avatar-image" :src="auth.user.avatar_url" alt="Profile photo"><span v-else class="account-avatar">{{ displayName.slice(0,1).toUpperCase() }}</span></button>
     </header>
 
     <Transition name="mobile-menu-fade">
