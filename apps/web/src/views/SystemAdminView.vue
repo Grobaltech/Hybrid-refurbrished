@@ -35,7 +35,7 @@ async function createShopDirector() {
     })
     if (error) throw error
     if (data?.error) throw new Error(data.error)
-    directorSuccess.value = 'Shop Director account created. The director can now sign in using the email and password you set.'
+    directorSuccess.value = 'Shop Director account and shop workspace created. The director can now sign in and complete the shop setup.'
     shopDirectorExists.value = true
     directorPassword.value = ''
   } catch (cause: unknown) {
@@ -97,7 +97,7 @@ async function signOut() {
       </a>
       <div class="sidebar-caption">CONTROL CENTRE</div>
       <a class="system-nav active" href="/system-admin"><span>◫</span> Overview</a>
-      <a class="system-nav" href="/system-settings"><span>⚙</span> System settings</a>
+      <a class="system-nav" href="/system-settings"><span>⚙</span> Shop setting options</a>
       <div class="sidebar-caption spaced">MANAGEMENT</div>
       <div class="system-nav muted"><span>▣</span> Shop setup <small>Coming next</small></div>
       <div class="system-nav muted"><span>♙</span> System accounts</div>
