@@ -6,7 +6,7 @@ const router = createRouter({
   routes: [
     { path: '/login', component: () => import('./views/LoginView.vue') },
     { path: '/system-admin', component: () => import('./views/SystemAdminView.vue') },
-    { path: '/system-settings', component: () => import('./views/SettingsView.vue') },
+    { path: '/system-settings', component: () => import('./views/SystemSettingsView.vue') },
     { path: '/', component: () => import('./layouts/AppLayout.vue'), children: [
       { path: '', redirect: '/dashboard' },
       { path: 'dashboard', component: () => import('./views/DashboardView.vue') },
@@ -30,6 +30,7 @@ const router = createRouter({
       { path: 'crm', component: () => import('./views/CrmHomeView.vue'), meta: { roles: ['admin'] } },
       { path: 'cms', component: () => import('./views/ContentHomeView.vue'), meta: { roles: ['admin'] } },
       { path: 'account', component: () => import('./views/AccountView.vue') },
+      { path: 'settings', component: () => import('./views/SettingsView.vue'), meta: { roles: ['admin'] } },
       { path: 'forbidden', component: () => import('./views/ForbiddenView.vue') },
     ]},
     { path: '/:pathMatch(.*)*', redirect: '/dashboard' },
