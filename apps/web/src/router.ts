@@ -10,7 +10,8 @@ const router = createRouter({
     { path: '/', component: () => import('./layouts/AppLayout.vue'), children: [
       { path: '', redirect: '/dashboard' },
       { path: 'dashboard', component: () => import('./views/DashboardView.vue') },
-      { path: 'pos', component: () => import('./views/SalesView.vue'), meta: { roles: ['admin','manager','cashier'] } },\n      { path: 'sales', redirect: '/pos' },
+      { path: 'pos', component: () => import('./views/SalesView.vue'), meta: { roles: ['admin','manager','cashier'] } },
+      { path: 'sales', redirect: '/pos' },
       { path: 'receipts', component: () => import('./views/ReceiptsView.vue'), meta: { roles: ['admin','manager','cashier'] } },
       { path: 'receipts/:id', component: () => import('./views/ReceiptDetailView.vue'), meta: { roles: ['admin','manager','cashier'] } },
       { path: 'sales-history', component: () => import('./views/SalesHistoryView.vue'), meta: { roles: ['admin','manager'] } },
