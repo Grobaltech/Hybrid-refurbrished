@@ -127,7 +127,7 @@ onMounted(async()=>{try{const {data:{user},error:userError}=await supabase.auth.
                 <p v-if="directorError" class="form-message error-message">{{ directorError }}</p>
                 <p v-if="directorSuccess" class="form-message success-message">{{ directorSuccess }}</p>
                 <button class="create-action" type="submit" :disabled="creatingDirector || hasDirector">
-                  {{ creatingDirector ? 'Creating account…' : shopDirectorExists ? 'Shop Director already registered' : 'Create Shop Director account' }} <span>→</span>
+                  {{ creatingDirector ? 'Creating account…' : hasDirector ? 'Shop Director already registered' : 'Create Shop Director account' }} <span>→</span>
                 </button>
               </form>
               <div v-else class="mt-4 rounded-lg border border-emerald-100 bg-emerald-50 p-3 text-sm text-emerald-800">Director registered. Next: complete the shop setup from the Director account.</div><small class="action-note">Only the System Super Admin can create this account. The password is sent securely to Supabase Auth and is not stored in the profile.</small>
