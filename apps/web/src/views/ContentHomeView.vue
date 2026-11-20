@@ -6,7 +6,7 @@ const fields = [
   { key: 'title', label: 'Title', required: true },
   { key: 'body', label: 'Content', type: 'textarea' },
   { key: 'image_url', label: 'Image URL' },
-  { key: 'published', label: 'Published', type: 'text' },
+  { key: 'published', label: 'Published', type: 'checkbox', defaultValue: false },
 ]
 </script>
 
