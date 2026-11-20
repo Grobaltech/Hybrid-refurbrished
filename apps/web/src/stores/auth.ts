@@ -12,7 +12,7 @@ export type AuthProfile = {
 }
 
 export const useAuth = defineStore('auth', () => {
-  const user = ref<{ id: string; email?: string } | null>(null)
+  const user = ref<{ id: string; email?: string; full_name?: string; phone?: string; avatar_url?: string } | null>(null)
   const profile = ref<AuthProfile | null>(null)
   const loading = ref(true)
   const isAdmin = computed(() => profile.value?.role === 'admin')
@@ -21,7 +21,7 @@ export const useAuth = defineStore('auth', () => {
     loading.value = true
     try {
       const { data: { user: currentUser } } = await supabase.auth.getUser()
-      user.value = currentUser ? { id: currentUser.id, email: currentUser.email } : null
+      user.value = currentUser ? { id: currentUser.id, email: currentUser.email, full_name: String(currentUser.user_metadata?.full_name || currentUser.user_metadata?.name || ''), phone: String(currentUser.user_metadata?.phone || ''), avatar_url: String(currentUser.user_metadata?.avatar_url || '') } : null
       if (!currentUser) { profile.value = null; return }
       const [p, c, a] = await Promise.all([
         supabase.from('profiles').select('*').eq('id', currentUser.id).maybeSingle(),
