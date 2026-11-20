@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, onMounted, ref } from 'vue'
+import { computed, onMounted, ref, watch } from 'vue'
 import { supabase } from '@/lib/supabase'
 import { useAuth } from '@/stores/auth'
 
@@ -74,6 +74,7 @@ async function transfer(){
  }catch(e:any){error.value=e.message||'Stock transfer failed'}finally{saving.value=false}
 }
 async function setStatus(b:Branch){const next=b.status==='active'?'inactive':'active';const {error:e}=await supabase.from('branches').update({status:next,updated_at:new Date().toISOString()}).eq('id',b.id);if(e)error.value=e.message;else await load()}
+watch(selectedBranch,()=>{manager.value=selected.value?.manager_id||''})
 onMounted(load)
 </script>
 <template>
