@@ -2,7 +2,9 @@
 import { computed, onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { supabase } from '@/lib/supabase'
+import { useAuth } from '@/stores/auth'
 const router = useRouter()
+const auth = useAuth()
 const products = ref<any[]>([]), customers = ref<any[]>([])
 const cart = ref<{product_id:string;name:string;quantity:number;unit_price:number;stock:number}[]>([])
 const customer = ref<string | null>(null), showCustomer = ref(false), newCustomerName = ref(''), newCustomerPhone = ref('')
@@ -63,7 +65,7 @@ onMounted(load)
 <div class="panel"><h2>Products</h2><input v-model="search" class="control" placeholder="Search product or SKU"><div class="product-pick"><button v-for="p in matches" :key="p.id" class="product-option" @click="add(p)"><b>{{ p.name }}</b><span>{{ p.sku }} · UGX {{ Number(p.selling_price).toLocaleString() }}</span><small>{{ p.quantity }} in stock</small></button></div></div>
 <div class="panel"><h2>Sale cart</h2><div v-if="!cart.length" class="empty">No items added yet.</div>
 <div v-for="item in cart" :key="item.product_id" class="cart-line"><div><b>{{ item.name }}</b><small>UGX {{ item.unit_price.toLocaleString() }} each</small></div><input v-model.number="item.quantity" type="number" min="1" :max="item.stock" class="control qty"><b>UGX {{ (item.quantity * item.unit_price).toLocaleString() }}</b><button class="link danger" @click="cart = cart.filter(x => x.product_id !== item.product_id)">×</button></div>
-<label>Customer<select v-model="customer" class="control"><option :value="null">Walk-in customer</option><option v-for="c in customers" :key="c.id" :value="c.id">{{ c.name }} {{ c.phone ? '· ' + c.phone : '' }}</option></select><button type="button" class="link" @click="showCustomer = true">＋ Add new customer</button></label>
+<label>Customer<select v-model="customer" class="control"><option :value="null">Walk-in customer</option><option v-for="c in customers" :key="c.id" :value="c.id">{{ c.name }} {{ c.phone ? '· ' + c.phone : '' }}</option></select><button v-if="auth.profile?.role !== 'cashier'" type="button" class="link" @click="showCustomer = true">＋ Add new customer</button></label>
 <label>Payment method<select v-model="payment" class="control"><option value="cash">Cash</option><option value="credit">Credit</option><option value="mobile_money">Mobile money</option><option value="bank">Bank</option></select></label>
 <label>Discount (UGX)<input v-model.number="discount" type="number" min="0" :max="subtotal" class="control"></label><label>Tax rate (%)<input v-model.number="taxRate" type="number" min="0" max="100" class="control"></label><label>Notes<textarea v-model="notes" class="control" rows="2"/></label>
 <div class="totals"><div>Subtotal <b>UGX {{ subtotal.toLocaleString() }}</b></div><div>Discount <b>UGX {{ Number(discount).toLocaleString() }}</b></div><div>Tax <b>UGX {{ taxAmount.toLocaleString() }}</b></div><div class="grand">Total <b>UGX {{ total.toLocaleString() }}</b></div></div>
