@@ -1,11 +1,16 @@
 <script setup lang="ts">
-import { computed, nextTick, onMounted, ref } from 'vue'
+import { computed, nextTick, onBeforeUnmount, onMounted, ref } from 'vue'
+import { BrowserMultiFormatReader } from '@zxing/browser'
 import { useRouter } from 'vue-router'
 import { supabase } from '@/lib/supabase'
 import { useAuth } from '@/stores/auth'
 const router = useRouter()
 const auth = useAuth()
 const products = ref<any[]>([]), customers = ref<any[]>([]), barcodeInput = ref<HTMLInputElement | null>(null)
+const videoPreview = ref<HTMLVideoElement | null>(null)
+const cameraActive = ref(false), cameraBusy = ref(false), cameraMessage = ref('')
+const codeReader = new BrowserMultiFormatReader()
+let scannerControls: { stop: () => void } | null = null
 const cart = ref<{product_id:string;name:string;quantity:number;unit_price:number;stock:number}[]>([])
 const customer = ref<string | null>(null), showCustomer = ref(false), newCustomerName = ref(''), newCustomerPhone = ref('')
 const payment = ref('cash'), taxRate = ref(0), discount = ref(0), notes = ref(''), search = ref(''), busy = ref(false), error = ref('')
@@ -29,13 +34,56 @@ async function add(p: any) {
   else cart.value.push({ product_id: p.id, name: p.name, quantity: 1, unit_price: Number(p.selling_price), stock: Number(p.quantity) })
   await nextTick(); barcodeInput.value?.focus()
 }
+async function processBarcode(codeValue: string) {
+  const code = codeValue.trim()
+  if (!code) return
+  const product = products.value.find(p => String(p.barcode ?? '').trim() === code || String(p.sku ?? '').trim().toLowerCase() === code.toLowerCase())
+  if (!product) { error.value = `No active product found for barcode: ${code}`; return }
+  if (Number(product.quantity) <= 0) { error.value = `${product.name} is out of stock`; return }
+  error.value = ''; await add(product)
+}
 async function scanBarcode() {
   const code = String(barcodeInput.value?.value ?? '').trim()
   if (!code) return
-  const product = products.value.find(p => String(p.barcode ?? '').trim() === code || String(p.sku ?? '').trim().toLowerCase() === code.toLowerCase())
-  if (!product) { error.value = `No active product found for barcode: ${code}`; if (barcodeInput.value) barcodeInput.value.value = ''; await nextTick(); barcodeInput.value?.focus(); return }
-  if (Number(product.quantity) <= 0) { error.value = `${product.name} is out of stock`; return }
-  error.value = ''; await add(product); if (barcodeInput.value) barcodeInput.value.value = ''
+  await processBarcode(code)
+  if (barcodeInput.value) barcodeInput.value.value = ''
+  await nextTick(); barcodeInput.value?.focus()
+}
+async function startCameraScan() {
+  if (cameraBusy.value || cameraActive.value) return
+  if (!navigator.mediaDevices?.getUserMedia) {
+    cameraMessage.value = 'Camera access is unavailable. Open this page over HTTPS in a supported browser, or use a handheld scanner.'
+    return
+  }
+  cameraBusy.value = true; cameraMessage.value = 'Requesting camera access…'; error.value = ''
+  try {
+    await nextTick()
+    if (!videoPreview.value) throw new Error('Camera preview could not be opened.')
+    scannerControls = await codeReader.decodeFromConstraints(
+      { audio: false, video: { facingMode: { ideal: 'environment' } } },
+      videoPreview.value,
+      async (result) => {
+        if (!result || !cameraActive.value) return
+        const code = result.getText()
+        stopCameraScan()
+        cameraMessage.value = `Scanned ${code}. The item has been added if it matches a product barcode.`
+        await processBarcode(code)
+        await nextTick(); barcodeInput.value?.focus()
+      }
+    )
+    cameraActive.value = true
+    cameraMessage.value = 'Camera is ready. Point it at a product barcode.'
+  } catch (e: any) {
+    stopCameraScan()
+    cameraMessage.value = e?.name === 'NotAllowedError'
+      ? 'Camera permission was denied. Allow camera access in your browser settings and try again.'
+      : (e?.message || 'Could not start the camera. Check camera permission and try again.')
+  } finally { cameraBusy.value = false }
+}
+function stopCameraScan() {
+  scannerControls?.stop()
+  scannerControls = null
+  cameraActive.value = false
 }
 async function createCustomer() {
   const name = newCustomerName.value.trim()
@@ -68,10 +116,13 @@ async function checkout() {
   } catch (e: any) { error.value = e.message ?? 'Could not complete sale' } finally { busy.value = false }
 }
 onMounted(async () => { await load(); await nextTick(); barcodeInput.value?.focus() })
+onBeforeUnmount(() => stopCameraScan())
 </script>
-<template><section class="page-wrap"><div class="page-heading"><div><h1>Point of Sale</h1><p>Scan barcodes or search products to build a sale and issue a receipt.</p></div></div>
+<template><section class="page-wrap"><div class="page-heading"><div><h1>Point of Sale</h1><p>Scan barcodes using your phone camera or a USB/Bluetooth scanner, or search products to build a sale.</p></div></div>
 <p v-if="error" class="alert">{{ error }}</p><div class="sales-grid">
-<div class="panel"><h2>Scan or find products</h2><label>Barcode scanner<input ref="barcodeInput" class="control" placeholder="Scan barcode then press Enter" autocomplete="off" @keydown.enter.prevent="scanBarcode"></label><p class="muted">Connect a USB/Bluetooth barcode scanner. Most scanners type the barcode and send Enter automatically.</p><input v-model="search" class="control" placeholder="Or search product, SKU or barcode"><div class="product-pick"><button v-for="p in matches" :key="p.id" class="product-option" @click="add(p)"><b>{{ p.name }}</b><span>{{ p.sku }} · UGX {{ Number(p.selling_price).toLocaleString() }}</span><small>{{ p.quantity }} in stock</small></button></div></div>
+<div class="panel"><h2>Scan or find products</h2>
+<div class="camera-scan"><div class="camera-actions"><button type="button" class="btn primary" :disabled="cameraBusy || cameraActive" @click="startCameraScan">{{ cameraBusy ? 'Opening camera…' : cameraActive ? 'Camera active' : 'Scan with phone camera' }}</button><button v-if="cameraActive" type="button" class="btn" @click="stopCameraScan">Stop camera</button></div><video v-show="cameraActive" ref="videoPreview" class="barcode-video" autoplay muted playsinline></video><p v-if="cameraMessage" class="muted">{{ cameraMessage }}</p><p v-else class="muted">On a phone, use the rear camera to scan product barcodes.</p></div>
+<label>Handheld barcode scanner<input ref="barcodeInput" class="control" placeholder="Scan barcode then press Enter" autocomplete="off" @keydown.enter.prevent="scanBarcode"></label><p class="muted">USB/Bluetooth scanners work like a keyboard and usually send Enter automatically.</p><input v-model="search" class="control" placeholder="Or search product, SKU or barcode"><div class="product-pick"><button v-for="p in matches" :key="p.id" class="product-option" @click="add(p)"><b>{{ p.name }}</b><span>{{ p.sku }} · UGX {{ Number(p.selling_price).toLocaleString() }}</span><small>{{ p.quantity }} in stock</small></button></div></div>
 <div class="panel"><h2>Sale cart</h2><div v-if="!cart.length" class="empty">No items added yet.</div>
 <div v-for="item in cart" :key="item.product_id" class="cart-line"><div><b>{{ item.name }}</b><small>UGX {{ item.unit_price.toLocaleString() }} each</small></div><input v-model.number="item.quantity" type="number" min="1" :max="item.stock" class="control qty"><b>UGX {{ (item.quantity * item.unit_price).toLocaleString() }}</b><button class="link danger" @click="cart = cart.filter(x => x.product_id !== item.product_id)">×</button></div>
 <label>Customer<select v-model="customer" class="control"><option :value="null">Walk-in customer</option><option v-for="c in customers" :key="c.id" :value="c.id">{{ c.name }} {{ c.phone ? '· ' + c.phone : '' }}</option></select><button v-if="auth.profile?.role !== 'cashier'" type="button" class="link" @click="showCustomer = true">＋ Add new customer</button></label>
@@ -81,3 +132,8 @@ onMounted(async () => { await load(); await nextTick(); barcodeInput.value?.focu
 <button class="btn primary full" :disabled="busy || !cart.length || cart.some(x => x.quantity < 1 || x.quantity > x.stock) || discount < 0 || discount > subtotal" @click="checkout">{{ busy ? 'Processing…' : 'Complete sale' }}</button></div></div>
 <div v-if="showCustomer" class="modal-backdrop" @click.self="showCustomer = false"><form class="modal" @submit.prevent="createCustomer"><h2>New customer</h2><label>Name<input v-model="newCustomerName" class="control" required></label><label>Phone<input v-model="newCustomerPhone" class="control"></label><div class="modal-actions"><button type="button" class="btn" @click="showCustomer = false">Cancel</button><button class="btn primary">Save customer</button></div></form></div>
 </section></template>
+<style scoped>
+.camera-scan{margin:14px 0 18px;padding:14px;border:1px solid #dbe3ef;border-radius:12px;background:#f8fafc}
+.camera-actions{display:flex;gap:10px;flex-wrap:wrap}
+.barcode-video{display:block;width:100%;max-height:300px;margin-top:12px;border-radius:10px;background:#0f172a;object-fit:cover}
+</style>
