@@ -5,7 +5,7 @@ import { supabase } from '@/lib/supabase'
 type Shop = { id:string; shop_name:string|null; phone:string|null; email:string|null; address:string|null; currency:string; timezone:string; receipt_footer:string|null; setup_completed:boolean }
 type Definition = { id:string; setting_key:string; label:string; description:string|null; input_type:string; options:string[]; default_value:unknown; required:boolean }
 type ShopSetting = { setting_id:string; setting_value:unknown }
-const shop=ref<Shop|null>(null), definitions=ref<Definition[]>([]), values=ref<Record<string,unknown>>({})
+const shop=ref<Shop|null>(null), definitions=ref<Definition[]>([]), values=ref<Record<string,any>>({})
 const loading=ref(true), savingProfile=ref(false), savingSetting=ref(''), error=ref(''), success=ref('')
 const setupReady=computed(()=>!!shop.value?.shop_name?.trim())
 function valueFor(d:Definition){return values.value[d.id] ?? d.default_value ?? (d.input_type==='boolean'?false:'')}
