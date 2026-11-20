@@ -37,29 +37,48 @@ const mobileMenuOpen = ref(false)
 const installPrompt = ref<any>(null)
 const installState = ref<'available'|'installed'|'unavailable'>('unavailable')
 const installBusy = ref(false)
+const isInstalledApp = ref(false)
+const canShowInstall = computed(() => !isInstalledApp.value && installState.value !== 'installed')
 const notificationsOpen = ref(false)
 const installHelpOpen = ref(false)
 const notificationPermission = ref<NotificationPermission>(typeof Notification === 'undefined' ? 'default' : Notification.permission)
 const displayName = computed(() => String(auth.user?.full_name || auth.profile?.full_name || auth.profile?.name || auth.user?.email?.split('@')[0] || 'My account'))
 const isIOS = typeof navigator !== 'undefined' && /iphone|ipad|ipod/i.test(navigator.userAgent)
 const isAndroid = typeof navigator !== 'undefined' && /android/i.test(navigator.userAgent)
+function syncInstalledMode() {
+  if (typeof window === 'undefined') return
+  const standalone = window.matchMedia('(display-mode: standalone)').matches
+    || window.matchMedia('(display-mode: fullscreen)').matches
+    || window.matchMedia('(display-mode: minimal-ui)').matches
+    || window.matchMedia('(display-mode: window-controls-overlay)').matches
+    || Boolean((navigator as Navigator & { standalone?: boolean }).standalone)
+  if (standalone) {
+    isInstalledApp.value = true
+    installPrompt.value = null
+    installState.value = 'installed'
+    installHelpOpen.value = false
+  }
+}
 function onBeforeInstallPrompt(event: Event) {
+  if (isInstalledApp.value) return
   event.preventDefault()
   installPrompt.value = event
   installState.value = 'available'
 }
 function onAppInstalled() {
+  isInstalledApp.value = true
   installPrompt.value = null
   installState.value = 'installed'
+  installHelpOpen.value = false
 }
 async function installApp() {
-  if (installBusy.value) return
+  if (installBusy.value || isInstalledApp.value) return
   if (!installPrompt.value) { installHelpOpen.value = true; return }
   installBusy.value = true
   try {
     await installPrompt.value.prompt()
     const choice = await installPrompt.value.userChoice
-    if (choice?.outcome === 'accepted') installState.value = 'installed'
+    if (choice?.outcome === 'accepted') { isInstalledApp.value = true; installState.value = 'installed'; installHelpOpen.value = false }
     installPrompt.value = null
   } finally { installBusy.value = false }
 }
@@ -101,16 +120,25 @@ async function logout() {
   await router.replace('/login')
 }
 
+const displayModeQueries: MediaQueryList[] = []
+function onDisplayModeChange() { syncInstalledMode() }
+
 onMounted(async () => {
+  syncInstalledMode()
+  for (const mode of ['standalone', 'fullscreen', 'minimal-ui', 'window-controls-overlay']) {
+    const query = window.matchMedia('(display-mode: ' + mode + ')')
+    query.addEventListener?.('change', onDisplayModeChange)
+    displayModeQueries.push(query)
+  }
   window.addEventListener('beforeinstallprompt', onBeforeInstallPrompt)
   window.addEventListener('appinstalled', onAppInstalled)
   await auth.loadProfile()
   await loadBranches()
-  if (window.matchMedia('(display-mode: standalone)').matches || (navigator as any).standalone) installState.value = 'installed'
 })
 onBeforeUnmount(() => {
   window.removeEventListener('beforeinstallprompt', onBeforeInstallPrompt)
   window.removeEventListener('appinstalled', onAppInstalled)
+  for (const query of displayModeQueries) query.removeEventListener?.('change', onDisplayModeChange)
 })
 
 </script>
@@ -139,7 +167,7 @@ onBeforeUnmount(() => {
     </aside>
 
     <header class="mobile-bar">
-      <button v-if="installState !== 'installed'" class="mobile-install" aria-label="Install Hybrid Shop" @click="installApp" :disabled="installBusy">↓</button>
+      <button v-if="canShowInstall" class="mobile-install" aria-label="Install Hybrid Shop" @click="installApp" :disabled="installBusy">↓</button>
       <button class="mobile-menu-trigger" aria-label="Open navigation menu" :aria-expanded="mobileMenuOpen" @click="mobileMenuOpen = true">
         <span class="hamburger-lines"><i></i><i></i><i></i></span>
       </button>
@@ -152,7 +180,7 @@ onBeforeUnmount(() => {
     </header>
 
     <Transition name="mobile-menu-fade">
-      <div v-if="installHelpOpen" class="install-help-backdrop" @click.self="installHelpOpen = false">
+      <div v-if="installHelpOpen && canShowInstall" class="install-help-backdrop" @click.self="installHelpOpen = false">
         <section class="install-help-dialog">
           <button class="install-help-close" @click="installHelpOpen = false" aria-label="Close">×</button>
           <span class="install-help-icon">↓</span><h2>Install Hybrid Shop</h2>
@@ -169,7 +197,7 @@ onBeforeUnmount(() => {
         <p class="notification-note">Stay updated about activity in your shop.</p>
         <div class="notification-setting"><span><strong>Browser notifications</strong><small>{{ notificationPermission === 'granted' ? 'Enabled on this device' : notificationPermission === 'denied' ? 'Blocked in browser settings' : 'Not enabled yet' }}</small></span><button class="btn primary" :disabled="notificationPermission !== 'default'" @click="enableBrowserNotifications">{{ notificationPermission === 'granted' ? 'Enabled' : 'Enable' }}</button></div>
         <div class="notification-setting"><span><strong>SMS updates</strong><small>Manage your phone number and SMS consent in your profile.</small></span><button class="btn" @click="closeNotifications();router.push('/account')">Profile</button></div>
-        <div v-if="installState !== 'installed'" class="notification-setting"><span><strong>Install Hybrid Shop</strong><small>Add the app to this device.</small></span><button class="btn primary" :disabled="installBusy" @click="installApp">Install</button></div>
+        <div v-if="canShowInstall" class="notification-setting"><span><strong>Install Hybrid Shop</strong><small>Add the app to this device.</small></span><button class="btn primary" :disabled="installBusy" @click="installApp">Install</button></div>
       </div>
     </Transition>
     <Transition name="mobile-menu-fade">
@@ -218,7 +246,7 @@ onBeforeUnmount(() => {
 
     <div class="desktop-utility-bar">
       <div class="desktop-utility-spacer"></div>
-      <button v-if="installState !== 'installed'" class="utility-button install-utility" @click="installApp" :disabled="installBusy">↓ Install app</button>
+      <button v-if="canShowInstall" class="utility-button install-utility" @click="installApp" :disabled="installBusy">↓ Install app</button>
       <button class="utility-button" aria-label="Notifications" @click="toggleNotifications">🔔</button>
       <button class="utility-profile" @click="router.push('/account')"><span class="account-avatar">{{ displayName.slice(0,1).toUpperCase() }}</span><span>{{ displayName }}<small>{{ role.replace('_',' ') }}</small></span></button>
     </div>
