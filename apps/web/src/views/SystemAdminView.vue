@@ -29,10 +29,10 @@ onMounted(async()=>{try{const {data:{user},error:userError}=await supabase.auth.
       <a class="system-nav active" href="/system-admin"><span>◫</span> Overview</a>
       <a class="system-nav" href="/system-settings"><span>⚙</span> Shop setting options</a>
       <div class="sidebar-caption spaced">MANAGEMENT</div>
-      <div class="system-nav muted"><span>▣</span> Shop setup <small>Coming next</small></div>
-      <div class="system-nav muted"><span>♙</span> System accounts</div>
-      <div class="system-nav muted"><span>⌘</span> Security & access</div>
-      <div class="system-nav muted"><span>◷</span> Activity logs</div>
+      <a class="system-nav" href="#shops"><span>▣</span> Shop setup</a>
+      <a class="system-nav" href="#directors"><span>♙</span> Shop directors</a>
+      <a class="system-nav" href="#access"><span>⌘</span> Security & access</a>
+      <a class="system-nav" href="#activity"><span>◷</span> Activity logs</a>
       <div class="system-sidebar-bottom">
         <div class="super-profile"><span class="avatar">{{ initials }}</span><span><b>System Super Admin</b><small>{{ email }}</small></span></div>
         <button class="signout" @click="signOut">↪ <span>Sign out</span></button>
@@ -65,59 +65,49 @@ onMounted(async()=>{try{const {data:{user},error:userError}=await supabase.auth.
             <span class="status-pill">ACTIVE</span>
           </div>
 
-          <div class="overview-grid">
-            <article class="overview-card primary-card">
-              <div class="card-top"><span class="card-icon purple">▣</span><span class="card-label">REGISTERED STAFF PROFILES</span></div>
-              <strong>Active</strong>
-              <p>System administrator profile verified</p>
-            </article>
-            <article class="overview-card">
-              <div class="card-top"><span class="card-icon teal">⌂</span><span class="card-label">SHOP ENVIRONMENT</span></div>
-              <strong>1</strong>
-              <p>Hybrid Shop workspace</p>
-            </article>
-            <article class="overview-card">
-              <div class="card-top"><span class="card-icon amber">♙</span><span class="card-label">SHOP DIRECTOR</span></div>
-              <strong class="status-text">{{ shopDirectorExists ? 'Registered' : 'Not created' }}</strong>
-              <p>Primary operational administrator</p>
-            </article>
+          <div v-if="overview" class="overview-grid">
+            <article class="overview-card primary-card"><div class="card-top"><span class="card-icon purple">♙</span><span class="card-label">REGISTERED ACCOUNTS</span></div><strong>{{overview.counts.profiles}}</strong><p>{{overview.counts.active_users}} active · {{overview.counts.disabled_users}} disabled</p></article>
+            <article class="overview-card"><div class="card-top"><span class="card-icon teal">⌂</span><span class="card-label">SHOP WORKSPACES</span></div><strong>{{overview.counts.shops}}</strong><p>{{overview.counts.configured_shops}} configured · {{overview.counts.shops - overview.counts.configured_shops}} awaiting setup</p></article>
+            <article class="overview-card"><div class="card-top"><span class="card-icon amber">♙</span><span class="card-label">SHOP DIRECTORS</span></div><strong class="status-text">{{overview.counts.shop_directors}}</strong><p>{{hasDirector?'Director account found':'No Shop Director account yet'}}</p></article>
+            <article class="overview-card"><div class="card-top"><span class="card-icon purple">▣</span><span class="card-label">MANAGERS</span></div><strong>{{overview.counts.managers}}</strong><p>Shop management accounts</p></article>
+            <article class="overview-card"><div class="card-top"><span class="card-icon teal">♧</span><span class="card-label">CASHIERS</span></div><strong>{{overview.counts.cashiers}}</strong><p>Sales staff accounts</p></article>
           </div>
 
-          <div class="section-heading"><div><h2>Get your shop ready</h2><p>Complete these steps to bring your Hybrid workspace online.</p></div><span class="progress-label">SETUP IN PROGRESS</span></div>
+          <div class="section-heading"><div><h2>Get your shop ready</h2><p>Complete these steps to bring your Hybrid workspace online.</p></div><span class="progress-label">{{setupProgress}}</span></div>
           <div class="setup-card">
             <div class="setup-step done">
               <span class="step-number">✓</span>
               <div><b>Register system super administrator</b><p>Your system-level account is active and verified.</p></div>
               <span class="step-state">COMPLETE</span>
             </div>
-            <div class="setup-step current">
-              <span class="step-number">2</span>
+            <div class="setup-step" :class="hasDirector?'done':'current'">
+              <span class="step-number">{{hasDirector?'✓':'2'}}</span>
               <div><b>Create the Shop Director account</b><p>Give the shop director access to manage daily shop operations and staff.</p></div>
-              <span class="step-state">NEXT STEP</span>
+              <span class="step-state">{{hasDirector?'COMPLETE':'NEXT STEP'}}</span>
             </div>
-            <div class="setup-step">
-              <span class="step-number">3</span>
+            <div class="setup-step" :class="shopConfigured?'done':hasDirector?'current':''">
+              <span class="step-number">{{shopConfigured?'✓':'3'}}</span>
               <div><b>Configure shop profile</b><p>Set the shop name, contact details, currency and operating preferences.</p></div>
-              <span class="step-state">PENDING</span>
+              <span class="step-state">{{shopConfigured?'COMPLETE':hasDirector?'NEXT STEP':'PENDING'}}</span>
             </div>
           </div>
 
           <div class="bottom-grid">
             <article class="info-panel">
-              <div class="panel-heading"><span class="panel-icon">♙</span><div><h3>Shop Director account</h3><p>The next account to create</p></div></div>
-              <p class="panel-copy">The Shop Director will manage the business workspace. This account will not have system super administrator privileges.</p>
+              <div class="panel-heading"><span class="panel-icon">♙</span><div><h3>Shop Director account</h3><p>{{hasDirector?'Shop Director account is registered':'The next account to create'}}</p></div></div>
+              <p class="panel-copy">{{hasDirector?'A Shop Director account is already registered. The director must now complete the shop profile before staff and daily operations can be configured.':'The Shop Director will manage the business workspace. This account will not have system super administrator privileges.'}}</p>
               
-              <form class="director-form" @submit.prevent="createShopDirector">
+              <form v-if="!hasDirector" class="director-form" @submit.prevent="createShopDirector">
                 <label>Director username<input v-model.trim="directorUsername" required minlength="3" maxlength="40" pattern="[A-Za-z0-9._-]+" placeholder="e.g. shopdirector"></label>
                 <label>Director email address<input v-model.trim="directorEmail" type="email" required placeholder="director@example.com"></label>
                 <label>Temporary password<input v-model="directorPassword" type="password" required minlength="10" autocomplete="new-password" placeholder="At least 10 characters"></label>
                 <p v-if="directorError" class="form-message error-message">{{ directorError }}</p>
                 <p v-if="directorSuccess" class="form-message success-message">{{ directorSuccess }}</p>
-                <button class="create-action" type="submit" :disabled="creatingDirector || shopDirectorExists">
+                <button class="create-action" type="submit" :disabled="creatingDirector || hasDirector">
                   {{ creatingDirector ? 'Creating account…' : shopDirectorExists ? 'Shop Director already registered' : 'Create Shop Director account' }} <span>→</span>
                 </button>
               </form>
-              <small class="action-note">Only the System Super Admin can create this account. The password is sent securely to Supabase Auth and is not stored in the profile.</small>
+              <div v-else class="mt-4 rounded-lg border border-emerald-100 bg-emerald-50 p-3 text-sm text-emerald-800">Director registered. Next: complete the shop setup from the Director account.</div><small class="action-note">Only the System Super Admin can create this account. The password is sent securely to Supabase Auth and is not stored in the profile.</small>
             </article>
             <article class="info-panel security-panel">
               <div class="panel-heading"><span class="panel-icon shield">◇</span><div><h3>Access boundaries</h3><p>Two separate levels of authority</p></div></div>
