@@ -144,7 +144,7 @@ onBeforeUnmount(() => {
         <span class="brand-mark">H</span>
         <span><strong>Hybrid Shop</strong><small>{{ currentPage }}</small></span>
       </RouterLink>
-      <button class="mobile-action" aria-label="Notifications" :aria-expanded="notificationsOpen" @click="toggleNotifications"><span>♧</span><i v-if="notificationPermission !== 'granted'"></i></button>
+      <button class="mobile-action" aria-label="Notifications" :aria-expanded="notificationsOpen" @click="toggleNotifications"><span>🔔</span><i v-if="notificationPermission !== 'granted'"></i></button>
       <button class="mobile-account" aria-label="Open my profile" @click="router.push('/account')"><span class="account-avatar">{{ displayName.slice(0,1).toUpperCase() }}</span></button>
     </header>
 
@@ -216,7 +216,7 @@ onBeforeUnmount(() => {
     <div class="desktop-utility-bar">
       <div class="desktop-utility-spacer"></div>
       <button v-if="installState !== 'installed'" class="utility-button install-utility" @click="installApp" :disabled="installBusy">↓ Install app</button>
-      <button class="utility-button" aria-label="Notifications" @click="toggleNotifications">♧</button>
+      <button class="utility-button" aria-label="Notifications" @click="toggleNotifications">🔔</button>
       <button class="utility-profile" @click="router.push('/account')"><span class="account-avatar">{{ displayName.slice(0,1).toUpperCase() }}</span><span>{{ displayName }}<small>{{ role.replace('_',' ') }}</small></span></button>
     </div>
     <main class="main-area">
