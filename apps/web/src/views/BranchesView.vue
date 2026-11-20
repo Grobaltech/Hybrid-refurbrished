@@ -52,10 +52,12 @@ async function createBranch(){
 }
 async function saveManager(){
  if(!selected.value)return
+ const previousManager=selected.value.manager_id
  saving.value=true;error.value=''
  try{
   const {error:e}=await supabase.from('branches').update({manager_id:manager.value||null,updated_at:new Date().toISOString()}).eq('id',selectedBranch.value)
   if(e)throw e
+  if(previousManager&&previousManager!==manager.value){const {error:ue}=await supabase.rpc('unassign_staff_branch',{p_user_id:previousManager});if(ue)throw ue}
   if(manager.value){const {error:ae}=await supabase.rpc('assign_staff_branch',{p_user_id:manager.value,p_branch_id:selectedBranch.value});if(ae)throw ae}
   await load();notice.value='Branch manager assignment saved.'
  }catch(e:any){error.value=e.message}finally{saving.value=false}
