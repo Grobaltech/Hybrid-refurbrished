@@ -37,8 +37,9 @@ const installPrompt = ref<any>(null)
 const installState = ref<'available'|'installed'|'unavailable'>('unavailable')
 const installBusy = ref(false)
 const notificationsOpen = ref(false)
+const installHelpOpen = ref(false)
 const notificationPermission = ref<NotificationPermission>(typeof Notification === 'undefined' ? 'default' : Notification.permission)
-const displayName = computed(() => String(auth.profile?.full_name || auth.profile?.name || auth.user?.email?.split('@')[0] || 'My account'))
+const displayName = computed(() => String(auth.user?.full_name || auth.profile?.full_name || auth.profile?.name || auth.user?.email?.split('@')[0] || 'My account'))
 function onBeforeInstallPrompt(event: Event) {
   event.preventDefault()
   installPrompt.value = event
@@ -49,7 +50,8 @@ function onAppInstalled() {
   installState.value = 'installed'
 }
 async function installApp() {
-  if (!installPrompt.value || installBusy.value) return
+  if (installBusy.value) return
+  if (!installPrompt.value) { installHelpOpen.value = true; return }
   installBusy.value = true
   try {
     await installPrompt.value.prompt()
@@ -97,10 +99,10 @@ async function logout() {
 }
 
 onMounted(async () => {
-  await auth.loadProfile()
-  await loadBranches()
   window.addEventListener('beforeinstallprompt', onBeforeInstallPrompt)
   window.addEventListener('appinstalled', onAppInstalled)
+  await auth.loadProfile()
+  await loadBranches()
   if (window.matchMedia('(display-mode: standalone)').matches || (navigator as any).standalone) installState.value = 'installed'
 })
 onBeforeUnmount(() => {
@@ -134,7 +136,7 @@ onBeforeUnmount(() => {
     </aside>
 
     <header class="mobile-bar">
-      <button v-if="installState === 'available'" class="mobile-install" aria-label="Install Hybrid Shop" @click="installApp" :disabled="installBusy">↓</button>
+      <button v-if="installState !== 'installed'" class="mobile-install" aria-label="Install Hybrid Shop" @click="installApp" :disabled="installBusy">↓</button>
       <button class="mobile-menu-trigger" aria-label="Open navigation menu" :aria-expanded="mobileMenuOpen" @click="mobileMenuOpen = true">
         <span class="hamburger-lines"><i></i><i></i><i></i></span>
       </button>
@@ -147,12 +149,24 @@ onBeforeUnmount(() => {
     </header>
 
     <Transition name="mobile-menu-fade">
+      <div v-if="installHelpOpen" class="install-help-backdrop" @click.self="installHelpOpen = false">
+        <section class="install-help-dialog">
+          <button class="install-help-close" @click="installHelpOpen = false" aria-label="Close">×</button>
+          <span class="install-help-icon">↓</span><h2>Install Hybrid Shop</h2>
+          <p v-if="/iphone|ipad|ipod/i.test(navigator.userAgent)">In Safari, tap <strong>Share</strong>, then choose <strong>Add to Home Screen</strong> and confirm.</p>
+          <p v-else-if="/android/i.test(navigator.userAgent)">In your browser menu, choose <strong>Install app</strong> or <strong>Add to Home screen</strong>.</p>
+          <p v-else>In your browser's address bar, select the install icon, or open the browser menu and choose <strong>Install Hybrid Shop</strong> or <strong>Apps → Install this site as an app</strong>.</p>
+          <button class="btn primary" @click="installHelpOpen = false">Got it</button>
+        </section>
+      </div>
+    </Transition>
+    <Transition name="mobile-menu-fade">
       <div v-if="notificationsOpen" class="notification-panel">
         <div class="notification-panel-head"><strong>Notifications</strong><button @click="closeNotifications" aria-label="Close notifications">×</button></div>
         <p class="notification-note">Stay updated about activity in your shop.</p>
         <div class="notification-setting"><span><strong>Browser notifications</strong><small>{{ notificationPermission === 'granted' ? 'Enabled on this device' : notificationPermission === 'denied' ? 'Blocked in browser settings' : 'Not enabled yet' }}</small></span><button class="btn primary" :disabled="notificationPermission !== 'default'" @click="enableBrowserNotifications">{{ notificationPermission === 'granted' ? 'Enabled' : 'Enable' }}</button></div>
         <div class="notification-setting"><span><strong>SMS updates</strong><small>Manage your phone number and SMS consent in your profile.</small></span><button class="btn" @click="closeNotifications();router.push('/account')">Profile</button></div>
-        <div v-if="installState === 'available'" class="notification-setting"><span><strong>Install Hybrid Shop</strong><small>Add the app to this device.</small></span><button class="btn primary" :disabled="installBusy" @click="installApp">Install</button></div>
+        <div v-if="installState !== 'installed'" class="notification-setting"><span><strong>Install Hybrid Shop</strong><small>Add the app to this device.</small></span><button class="btn primary" :disabled="installBusy" @click="installApp">Install</button></div>
       </div>
     </Transition>
     <Transition name="mobile-menu-fade">
