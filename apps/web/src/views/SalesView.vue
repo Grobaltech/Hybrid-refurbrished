@@ -27,6 +27,15 @@ async function add(p: any) {
   const item = cart.value.find(x => x.product_id === p.id)
   if (item) { if (item.quantity < Number(p.quantity)) item.quantity++ }
   else cart.value.push({ product_id: p.id, name: p.name, quantity: 1, unit_price: Number(p.selling_price), stock: Number(p.quantity) })
+  await nextTick(); barcodeInput.value?.focus()
+}
+async function scanBarcode() {
+  const code = String(barcodeInput.value?.value ?? '').trim()
+  if (!code) return
+  const product = products.value.find(p => String(p.barcode ?? '').trim() === code || String(p.sku ?? '').trim().toLowerCase() === code.toLowerCase())
+  if (!product) { error.value = `No active product found for barcode: ${code}`; if (barcodeInput.value) barcodeInput.value.value = ''; await nextTick(); barcodeInput.value?.focus(); return }
+  if (Number(product.quantity) <= 0) { error.value = `${product.name} is out of stock`; return }
+  error.value = ''; await add(product); if (barcodeInput.value) barcodeInput.value.value = ''
 }
 async function createCustomer() {
   const name = newCustomerName.value.trim()
