@@ -97,6 +97,7 @@ async function signOut() {
       </a>
       <div class="sidebar-caption">CONTROL CENTRE</div>
       <a class="system-nav active" href="/system-admin"><span>◫</span> Overview</a>
+      <a class="system-nav" href="/system-settings"><span>⚙</span> System settings</a>
       <div class="sidebar-caption spaced">MANAGEMENT</div>
       <div class="system-nav muted"><span>▣</span> Shop setup <small>Coming next</small></div>
       <div class="system-nav muted"><span>♙</span> System accounts</div>
