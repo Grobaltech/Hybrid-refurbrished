@@ -215,7 +215,7 @@ onBeforeUnmount(() => {
 
     <div class="desktop-utility-bar">
       <div class="desktop-utility-spacer"></div>
-      <button v-if="installState === 'available'" class="utility-button install-utility" @click="installApp" :disabled="installBusy">↓ Install app</button>
+      <button v-if="installState !== 'installed'" class="utility-button install-utility" @click="installApp" :disabled="installBusy">↓ Install app</button>
       <button class="utility-button" aria-label="Notifications" @click="toggleNotifications">♧</button>
       <button class="utility-profile" @click="router.push('/account')"><span class="account-avatar">{{ displayName.slice(0,1).toUpperCase() }}</span><span>{{ displayName }}<small>{{ role.replace('_',' ') }}</small></span></button>
     </div>
