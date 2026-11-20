@@ -20,7 +20,7 @@ const fields = [
     <div class="page-heading">
       <div>
         <h1>Products</h1>
-        <p>Manage this shop's product catalogue, prices and stock quantities.</p>
+        <p>Manage the shared product catalogue and prices. Branch stock is tracked separately under Branch management.</p>
       </div>
       <RouterLink to="/products/new" class="btn primary">＋ Add product</RouterLink>
     </div>
@@ -28,7 +28,7 @@ const fields = [
       title="Product catalogue"
       table="products"
       :fields="fields"
-      :columns="['sku','name','category','selling_price','quantity','minimum_stock','active']"
+      :columns="['sku','name','category','selling_price','minimum_stock','active']"
       :search-keys="['sku','name','category','barcode']"
       :can-create="true"
       :can-delete="false"
