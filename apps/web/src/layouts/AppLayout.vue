@@ -41,6 +41,8 @@ const notificationsOpen = ref(false)
 const installHelpOpen = ref(false)
 const notificationPermission = ref<NotificationPermission>(typeof Notification === 'undefined' ? 'default' : Notification.permission)
 const displayName = computed(() => String(auth.user?.full_name || auth.profile?.full_name || auth.profile?.name || auth.user?.email?.split('@')[0] || 'My account'))
+const isIOS = typeof navigator !== 'undefined' && /iphone|ipad|ipod/i.test(navigator.userAgent)
+const isAndroid = typeof navigator !== 'undefined' && /android/i.test(navigator.userAgent)
 function onBeforeInstallPrompt(event: Event) {
   event.preventDefault()
   installPrompt.value = event
@@ -154,8 +156,8 @@ onBeforeUnmount(() => {
         <section class="install-help-dialog">
           <button class="install-help-close" @click="installHelpOpen = false" aria-label="Close">×</button>
           <span class="install-help-icon">↓</span><h2>Install Hybrid Shop</h2>
-          <p v-if="/iphone|ipad|ipod/i.test(navigator.userAgent)">In Safari, tap <strong>Share</strong>, then choose <strong>Add to Home Screen</strong> and confirm.</p>
-          <p v-else-if="/android/i.test(navigator.userAgent)">In your browser menu, choose <strong>Install app</strong> or <strong>Add to Home screen</strong>.</p>
+          <p v-if="isIOS">In Safari, tap <strong>Share</strong>, then choose <strong>Add to Home Screen</strong> and confirm.</p>
+          <p v-else-if="isAndroid">In your browser menu, choose <strong>Install app</strong> or <strong>Add to Home screen</strong>.</p>
           <p v-else>In your browser's address bar, select the install icon, or open the browser menu and choose <strong>Install Hybrid Shop</strong> or <strong>Apps → Install this site as an app</strong>.</p>
           <button class="btn primary" @click="installHelpOpen = false">Got it</button>
         </section>
